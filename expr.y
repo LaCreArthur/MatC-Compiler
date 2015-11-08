@@ -9,13 +9,18 @@
 
   int yylex();
   int yyerror();
+  // ajout de l'expression dans un QUAD chainé a code
   void expr_add(char op, struct symbol** res_result, struct quad** res_code,
                         struct symbol* arg1_result, struct quad* arg1_code,
                         struct symbol* arg2_result, struct quad* arg2_code);
+  // calcul l'expression arg1 op arg2 et retourne le resultat
+  // todo : changer le type de retour plus tard por les float et les matrices
   int op_calc(char op, struct symbol* arg1, struct symbol* arg2);
-  //int yydebug=1;
 
+  // table des symboles
   struct symbol* tds;
+
+  // code qu'il faudra transformer en MIPS
   struct quad* code;
 %}
 
@@ -40,11 +45,8 @@
 axiom:
     '\n'
   | Expr '\n'             { printf("  Match :~) !\n");
-                            printf("axiom : $1 code is");
-                            if ($1.code == NULL) printf(" null\n");
-                            else printf(" not null\n");
                             code = $1.code;
-                            printf("result id %s value = %d \n",$1.result->id,$1.result->value);
+                            printf("result (id :%s) = %d \n",$1.result->id,$1.result->value);
                           }
   ;
 /* GRAMMAIRE POUR CALCUL DE CONSTANTE */
@@ -63,10 +65,6 @@ Expr:
                               expr_add('*', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
-
-                              printf("Expr : $$ code is");
-                              if ($$.code == NULL) printf(" null\n");
-                              else printf(" not null\n");
                             }
   | Expr '/' Expr           { printf("Expr -> Expr / Expr\n");
                               expr_add('/', &$$.result, &$$.code,
@@ -75,12 +73,14 @@ Expr:
                             }
   | '(' Expr ')'            { printf("Expr -> ( Expr )\n");
                             }
-  | ID                      { printf("Expr -> ID\n");
+  | ID                      { // pas encore geré
+                              printf("Expr -> ID\n");
                               $$.result = symbol_add(tds, $1);
                               $$.code = NULL;
                             }
-  | INT                     { printf("Expr -> INT\n");
-                              if(tds == NULL) {
+  | INT                     { // ok
+                              printf("Expr -> INT\n");
+                              if(tds == NULL) { // initialise la tds
                                 tds = symbol_newtemp(&tds);
                                 $$.result = tds;
                               } else {
