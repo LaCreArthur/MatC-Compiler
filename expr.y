@@ -32,7 +32,7 @@
 %token <int_value> INT
 %type <codegen> Expr
 
-%left '+' '*'
+%left '+' '*' '-' '/'
 
 %%
 
@@ -47,7 +47,7 @@ axiom:
                             printf("result id %s value = %d \n",$1.result->id,$1.result->value);
                           }
   ;
-/* GRAMMAIRE CALCUL DE CONSTANTE */
+/* GRAMMAIRE POUR CALCUL DE CONSTANTE */
 Expr:
     Expr '+' Expr           { printf("Expr -> Expr + Expr\n");
                               expr_add('+', &$$.result, &$$.code,
@@ -68,11 +68,11 @@ Expr:
                               if ($$.code == NULL) printf(" null\n");
                               else printf(" not null\n");
                             }
-  // | Expr '/' Expr           { printf("Expr -> Expr / Expr\n");
-  //                             expr_add('/', $$.result, $$.code,
-  //                                           $1.result, $1.code,
-  //                                           $3.result, $3.code);
-  //                           }
+  | Expr '/' Expr           { printf("Expr -> Expr / Expr\n");
+                              expr_add('/', &$$.result, &$$.code,
+                                            $1.result, $1.code,
+                                            $3.result, $3.code);
+                            }
   | '(' Expr ')'            { printf("Expr -> ( Expr )\n");
                             }
   | ID                      { printf("Expr -> ID\n");
@@ -112,22 +112,24 @@ int op_calc(char op, struct symbol* arg1, struct symbol* arg2){
   switch (op) {
     case '+': return arg1->value + arg2->value;
     case '*': return arg1->value * arg2->value;
+    case '-': return arg1->value - arg2->value;
+    case '/': return arg1->value / arg2->value;
     default : return 0;
   }
 }
 
 int main(){
   printf("Enter a expression\n");
-  code = malloc(sizeof(struct quad*));
-
-  if (code != NULL) printf("code init ok\n");
   yyparse();
+
   printf("table :\n");
   symbol_print(tds);
   printf("code :\n");
   quad_print(code);
-  quad_free(code);  
-  symbol_free(tds);
-  test();
 
+  quad_free(code);
+  symbol_free(tds);
+
+  // // tests dans testmatrix.c
+  //test();
 }

@@ -6,6 +6,7 @@
 
 struct quad* quad_gen(char op,struct symbol* arg1,struct symbol* arg2,struct symbol* res){
 	struct quad* new = malloc(sizeof(*new));
+	if (new == NULL) perror("quad_gen fail : ");
 	new->op = op;
 	new->arg1 = arg1;
 	new->arg2 = arg2;
