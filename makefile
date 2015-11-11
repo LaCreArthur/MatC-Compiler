@@ -7,7 +7,7 @@ all : $(FILE).y $(FILE).lex $(CFILES)
 	yacc -d $(FILE).y
 	lex $(FILE).lex
 	gcc $(CFLAGS) *.c $(LIBS)
-	./a.out
+	./a.out codetest.txt
 
 clean :
 	rm y.tab.* lex.yy.c a.out

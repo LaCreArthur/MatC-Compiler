@@ -133,15 +133,27 @@ int op_calc(char op, struct symbol* arg1, struct symbol* arg2){
   }
 }
 
+
 int main(int argc, char *argv[]){
-  if (argc == 2 && (strcmp(argv[1], "-debug") == 0)) {
-     #define DEBUG 1;
+  if (argc < 2) {
+     fprintf(stderr," usage : %s <file.cpp> [-debug]\n", argv[0]);
+     exit(EXIT_FAILURE);
+   }
+   if (argc == 3 && (strcmp(argv[2], "-debug") == 0)) {
+     #define DEBUG 1
      printf("DEBUG MODE\n..........\n");
-  }
+   }
+
+  extern int yylex();
+  // extern int yyparse();
+  extern FILE *yyin;
 
   printf("Enter a expression\n");
 
+  yyin = fopen(argv[1],"r");
+  if(yyin == NULL) perror("yacc_fopen ");
   yyparse();
+
   printf("table :\n");
   symbol_print(tds);
   printf("code :\n");
