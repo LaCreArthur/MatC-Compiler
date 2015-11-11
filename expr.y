@@ -43,6 +43,11 @@
 
 
 axiom:
+  //rien
+  | axiom ligne
+  ;
+
+ligne :
     '\n'
   | Expr '\n'             { printf("  Match :~) !\n");
                             code = $1.code;

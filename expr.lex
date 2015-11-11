@@ -25,17 +25,23 @@ float					{int}("."{int})?{exp}?
 op						[()*/+-]
 notalpha			[+*\/|()\[\]\{\};\=-]
 predefid	  	("int"|"float"|"main")
-keyword 	   	(else|if|for|while)
+keyword 	   	(else|if|for|while|matrix)
 
 %%
 
 {comment}     {if(DEBUG) printf("_/* com */_");}
-{notlexunit}  {if(DEBUG) printf("%s", yytext);}
-{int}					{yylval.int_value = atoi(yytext);return(INT);} // ok
-{float}				{yylval.int_value = atof(yytext);}
+{notlexunit}  {if(DEBUG) printf("(!lex)%s", yytext);}
 
-{op}					{return yytext[0];}
-\n						{return yytext[0];}
+{notalpha}		{if(DEBUG) printf("(!al)%s", yytext);}
+{predefid}		{if(DEBUG) printf("(pre)%s", yytext);}
+{keyword}			{if(DEBUG) printf("(key)%s", yytext);}
+
+{int}					{if(DEBUG) printf("(int)%s", yytext); yylval.int_value = atoi(yytext);return(INT);} // ok
+{float}				{if(DEBUG) printf("(float)%s", yytext); yylval.int_value = atof(yytext);}
+{char}				{if(DEBUG) printf("(char)%s", yytext);}
+
+{op}					{if(DEBUG) printf("(op)%s", yytext); return yytext[0];}
+\n						{if(DEBUG) printf("(\\n)%s", yytext); return yytext[0];}
 . 						{ printf("[lex] unknonw char : %s\n", yytext);}
 
 %%
