@@ -12,8 +12,8 @@
 %}
 
 comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
-escapesec   	"\a"|"\\n"|"\\b"|"\t"|"\\t"|"\b"|"\\a"
-notlexunit		[ ]|{comment}|{escapesec}
+escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"
+notlexunit		" "|{escapesec}
 
 char		    	[a-zA-Z]
 digit					[0-9]
@@ -22,26 +22,27 @@ int						{digit}+
 exp						[Ee][+-]?{digit}
 float					{int}("."{int})?{exp}?
 
-op						[()*/+-]
-notalpha			[+*\/|()\[\]\{\};\=-]
-predefid	  	("int"|"float"|"main")
-keyword 	   	(else|if|for|while|matrix)
+op						[*/+-]
+notalpha			[()~|\[\]\{\};\=,"]
+predefid			matrix|int|float|main
+keyword 	   	else|if|for|while|matrix
 
 %%
 
-{comment}     {if(DEBUG) printf("_/* com */_");}
-{notlexunit}  {if(DEBUG) printf("(!lex)%s", yytext);}
-
-{notalpha}		{if(DEBUG) printf("(!al)%s", yytext);}
-{predefid}		{if(DEBUG) printf("(pre)%s", yytext);}
-{keyword}			{if(DEBUG) printf("(key)%s", yytext);}
-
-{int}					{if(DEBUG) printf("(int)%s", yytext); yylval.int_value = atoi(yytext);return(INT);} // ok
-{float}				{if(DEBUG) printf("(float)%s", yytext); yylval.int_value = atof(yytext);}
-{char}				{if(DEBUG) printf("(char)%s", yytext);}
-
+{int}					{if(DEBUG) printf("(int)%s", yytext); yylval.int_value = atoi(yytext); return(INT);}
+{float}				{if(DEBUG) printf("(float)%s", yytext); yylval.int_value = atof(yytext); return(INT);}
 {op}					{if(DEBUG) printf("(op)%s", yytext); return yytext[0];}
+
+	/*
+{notlexunit}  {if(DEBUG) printf("(!lex)%s", yytext); yylval.print = yytext[0]; return OTHER;}
+{notalpha}		{if(DEBUG) printf("(!al)%s", yytext); yylval.print = yytext[0]; return(OTHER);}
+
+{predefid}		{if(DEBUG) printf("(pre)%s", yytext); yylval.string = yytext; return STR;}
+{keyword}			{if(DEBUG) printf("(key)%s", yytext); yylval.string = yytext; return STR;}
+{ident}				{if(DEBUG) printf("(ident)%s", yytext); yylval.string = yytext; return ID;}
+{comment}     {if(DEBUG) printf("_com_"); yylval.string = yytext; return STR;} */
+
 \n						{if(DEBUG) printf("(\\n)%s", yytext); return yytext[0];}
-. 						{ printf("[lex] unknonw char : %s\n", yytext);}
+. 						{ printf("[lex] unknonw char : %s\n", yytext); return(OTHER);}
 
 %%

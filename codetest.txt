@@ -16,7 +16,7 @@ int main() {
 	printmat(A);
 	printf("et B = ");
 	printmat(B);
-	printf(est X= ");
+	printf("est X= ");
 	printmat(X);
 	printf("\n");
 	return 0;

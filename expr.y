@@ -30,10 +30,13 @@
     struct symbol* result;
     struct quad* code;
   } codegen;
+  char print;
 }
 
 %token <string> ID
+%token <print> OTHER
 %token <int_value> INT
+%token <string> STR
 %type <codegen> Expr
 
 %left '+' '*' '-' '/'
@@ -45,58 +48,65 @@
 axiom:
   //rien
   | axiom ligne
+  | axiom OTHER           { printf("%c",$2);}
+  | axiom STR             { printf("%s",$2);}
   ;
 
 ligne :
-    '\n'
-  | Expr '\n'             { printf("  Match :~) !\n");
+    '\n'                  { printf("\n");}
+  | Expr                  { //printf("  Match :~) !\n");
                             code = $1.code;
-                            printf("result id %s value = %d \n",$1.result->id,$1.result->value);
+                            //printf("result id %s value = %d \n",$1.result->id,$1.result->value);
                           }
   ;
+
 /* GRAMMAIRE POUR CALCUL DE CONSTANTE */
 Expr:
-    Expr '+' Expr           { printf("Expr -> Expr + Expr\n");
+    Expr '+' Expr           { //printf("Expr -> Expr + Expr\n");
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | Expr '-' Expr           { printf("Expr -> Expr - Expr\n");
+  | Expr '-' Expr           { //printf("Expr -> Expr - Expr\n");
                               expr_add('-', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | Expr '*' Expr           { printf("Expr -> Expr * Expr\n");
+  | Expr '*' Expr           { //printf("Expr -> Expr * Expr\n");
                               expr_add('*', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | Expr '/' Expr           { printf("Expr -> Expr / Expr\n");
+  | Expr '/' Expr           { //printf("Expr -> Expr / Expr\n");
                               expr_add('/', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | '(' Expr ')'            { printf("Expr -> ( Expr )\n");
+  | '(' Expr ')'            { //printf("Expr -> ( Expr )\n");
                             }
-  | Expr '+''+'             { printf("Expr -> Expr++\n");
+  | Expr '+''+'             { //printf("Expr -> Expr++\n");
                               temp_add(&tmp, 1);
-                              printf("hyehey\n");
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             tmp, NULL);
                             }
-  | Expr '-''-'             { printf("Expr -> Expr--\n");
+  | Expr '-''-'             { //printf("Expr -> Expr--\n");
                               struct symbol* tmp = (struct symbol*)malloc(sizeof(struct symbol));
                               temp_add(&tmp, -1);
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             tmp, NULL);
                             }
-  | ID                      { printf("Expr -> ID\n");
+  | '-' Expr %prec '-'      {
+                                
+                            }
+  | ID                      { //printf("Expr -> ID\n");
                               $$.result = symbol_add(tds, $1);
                               $$.code = NULL;
+                              printf("%s",$1);
                             }
-  | INT                     { printf("Expr -> INT\n");
+  | INT                     { //printf("Expr -> INT\n");
+                              printf("%d",$1);
                               temp_add(&$$.result, $1);
                               $$.code = NULL;
                             }
@@ -140,10 +150,10 @@ int op_calc(char op, struct symbol* arg1, struct symbol* arg2){
 
 
 int main(int argc, char *argv[]){
-  if (argc < 2) {
-     fprintf(stderr," usage : %s <file.cpp> [-debug]\n", argv[0]);
-     exit(EXIT_FAILURE);
-   }
+  // if (argc < 2) {
+  //    fprintf(stderr," usage : %s <file.cpp> [-debug]\n", argv[0]);
+  //    exit(EXIT_FAILURE);
+  //  }
    if (argc == 3 && (strcmp(argv[2], "-debug") == 0)) {
      #define DEBUG 1
      printf("DEBUG MODE\n..........\n");
@@ -155,18 +165,20 @@ int main(int argc, char *argv[]){
 
   printf("Enter a expression\n");
 
-  yyin = fopen(argv[1],"r");
-  if(yyin == NULL) perror("yacc_fopen ");
+  if (argc > 1){
+    yyin = fopen(argv[1],"r");
+    if(yyin == NULL) perror("yacc_fopen ");
+  }
   yyparse();
 
-  printf("table :\n");
-  symbol_print(tds);
-  printf("code :\n");
-  quad_print(code);
+  // printf("table :\n");
+  // symbol_print(tds);
+  // printf("code :\n");
+  // quad_print(code);
 
   quad_free(code);
   symbol_free(tds);
-  //free(tmp);
+
   // // tests dans testmatrix.c
   //test();
 }
