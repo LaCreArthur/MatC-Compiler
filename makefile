@@ -4,7 +4,7 @@ LIBS		= -ll -ly -lfl
 CFILES	=	symbol.c quad.c matrix.c testmatrix.c
 
 all : $(FILE).y $(FILE).lex $(CFILES)
-	yacc -d $(FILE).y
+	yacc -d $(FILE).y --verbose
 	lex $(FILE).lex
 	gcc $(CFLAGS) *.c $(LIBS)
 

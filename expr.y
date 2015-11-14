@@ -34,36 +34,36 @@
   char print;
 }
 
+%token INCR DECR
 %token <string> ID
 %token <print> OTHER
 %token <int_value> INT
 %token <string> STR
 %type <codegen> Expr
+%type <string> other
 
 %left '+' '*' '-' '/'
- // %right "++" "--"
+%right INCR DECR
 
 %%
 
-
 axiom:
   //rien
-  | axiom ligne
-  | axiom OTHER           { printf("%c",$2);}
-  | axiom STR             { printf("%s",$2);}
+  | axiom calc
+  | axiom other
   ;
 
-ligne :
+calc :
     '\n'                  { printf("\n");}
-  | Expr                  { printf("  Match :~) !\n");
+  | Expr                  { //printf("  Match :~) !\n");
                             code = $1.code;
-                            printf("result id %s value = %d \n",$1.result->id,$1.result->value);
+                            // printf("result id %s value = %d \n",$1.result->id,$1.result->value);
                           }
   ;
 
 /* GRAMMAIRE POUR CALCUL DE CONSTANTE */
 Expr:
-    Expr '+' Expr           { printf("Expr -> Expr + Expr\n");
+    Expr '+' Expr           { //printf("Expr -> Expr + Expr\n");
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
@@ -83,17 +83,19 @@ Expr:
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | '(' Expr ')'            { printf("Expr -> ( Expr )\n");
+  | '(' Expr ')'            { //printf("Expr -> ( Expr )\n");
                               $$ = $2;
                             }
-  | Expr '+''+'             { //printf("Expr -> Expr++\n");
+
+// ajouter un token de fin apres ++ et --, ils ne sont suivit d'aucune autre operations (conflit de expr-- avec expr-'-expr')
+  | Expr INCR               { //printf("Expr -> Expr++\n");
                               struct symbol* tmp_symb = (struct symbol*)calloc(1,sizeof(struct symbol));
                               temp_add(&tmp_symb, 1);
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             tmp_symb, NULL);
                             }
-  | Expr '-''-'             { //printf("Expr -> Expr--\n");
+  | Expr DECR               { //printf("Expr -> Expr--\n");
                               struct symbol* tmp_symb = (struct symbol*)calloc(1,sizeof(struct symbol));
                               temp_add(&tmp_symb, -1);
                               expr_add('+', &$$.result, &$$.code,
@@ -101,20 +103,26 @@ Expr:
                                             tmp_symb, NULL);
                             }
   | '-' Expr %prec '-'      {
-                              printf("-%d",$2.result->value);
+                              //printf("-%d",$2.result->value);
                               $$ = $2;
                               $$.result->value = -$2.result->value;
                             }
   | ID                      { //printf("Expr -> ID\n");
+                              //printf("%s",$1);
                               $$.result = symbol_add(tds, $1);
                               $$.code = NULL;
-                              printf("%s",$1);
                             }
-  | INT                     { printf("Expr -> INT\n");
-                              printf("%d",$1);
+  | INT                     { //printf("Expr -> INT\n");
+                              //printf("%d",$1);
                               temp_add(&$$.result, $1);
                               $$.code = NULL;
                             }
+  ;
+
+other:
+  OTHER                     { printf("%c",$1);}
+  // | '(' other ')'           { printf("(%s)",$2);}
+  | STR                     { printf("%s",$1);}
   ;
 
 %%
