@@ -4,16 +4,12 @@
 #include <string.h>
 #include "y.tab.h"
 #include "expr.h"
-#define PREDEFIDS {"matrix","int","float","main"}
-#define PREDEFIDS_SIZE 4
-#define SIMPLELEX {"else","if","while","for",","(",")","*","+",",","-","/",";",=","[","]","{","}"
-#define SIMPLELEX_SIZE 17}
 
 int DEBUG = 0;
 %}
 
 comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
-escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"
+escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"|"\n"
 notlexunit		" "|{escapesec}
 
 char		    	[a-zA-Z]
@@ -22,32 +18,44 @@ ident		    	{char}({char}|{digit})*
 int						{digit}+
 exp						[Ee][+-]?{digit}
 float					{int}("."{int})?{exp}?
+indice				("["{int}"]")+
 
 incr					"++"
 decr					"--"
+parenth				"()"
 op						[*/+()-]
-notalpha			[~|\[\]\{\};\=,"]
+notalpha			[~|\[\]\{\};,"=\*\/+()-]
 predefid			matrix|int|float|main
-keyword 	   	else|if|for|while|matrix
+keyword 	   	else|if|for|while|matrix|return
+
+string				\"([^"])*\"
+print					print"("{int}")"
+printf				printf"("{string}")"
+printmat			printmat"("{ident}")"
 
 %%
 
-{notlexunit}  {if(DEBUG) printf("%s", yytext);}
+{notlexunit}  { printf("%s", yytext);}
 
-{int}					{if(DEBUG) printf("(int)%s", yytext); yylval.int_value = atoi(yytext); return(INT);}
-{float}				{if(DEBUG) printf("(float)%s", yytext); yylval.int_value = atof(yytext); return(INT);}
-{incr}				{if(DEBUG) printf("(op)%s", yytext); return INCR;}
-{decr}				{if(DEBUG) printf("(op)%s", yytext); return DECR;}
-{op}					{if(DEBUG) printf("(op)%s", yytext); return yytext[0];}
+{int}					{ printf("%s", yytext); yylval.int_value = atoi(yytext); return INT;}
+{float}				{ printf("%s", yytext); yylval.int_value = atof(yytext); return INT;}
 
-{notalpha}		{if(DEBUG) printf("(!al)%s", yytext); yylval.print = yytext[0]; return OTHER;}
+{incr}				{ printf("%s", yytext); return INCR;}
+{decr}				{ printf("%s", yytext); return DECR;}
+{parenth}			{ printf("%s", yytext); return PARENTH;}
+{op}					{ printf("%s", yytext); return yytext[0];}
 
-{predefid}		{if(DEBUG) printf("(pre)%s", yytext); yylval.string = yytext; return STR;}
-{keyword}			{if(DEBUG) printf("(key)%s", yytext); yylval.string = yytext; return STR;}
-{ident}				{if(DEBUG) printf("(ident)%s", yytext); yylval.string = yytext; return ID;}
-{comment}     {if(DEBUG) printf("_com_"); yylval.string = yytext; return STR;}
+{indice}			{if(DEBUG) printf(" ind_"); printf("%s", yytext); return INDICE;}
+{predefid}		{if(DEBUG) printf(" pdi_"); printf("%s", yytext); yylval.string = yytext; return STR;}
+{keyword}			{if(DEBUG) printf(" kw_");  printf("%s", yytext); yylval.string = yytext; return STR;}
+{print}				{ if(DEBUG) printf(" prt_");  printf("%s", yytext); return PRINT;}
+{printf}			{ if(DEBUG) printf(" prtf_"); printf("%s", yytext); return PRINTF;}
+{printmat}		{ if(DEBUG) printf(" prtm_"); printf("%s", yytext); return PRINTM;}
 
-\n						{if(DEBUG) printf("(\\n)%s", yytext); return yytext[0];}
+{ident}				{if(DEBUG) printf(" id_");  printf("%s", yytext); yylval.string = yytext; return ID;}
+
+{comment}     { printf("%s", yytext); yylval.string = yytext; return STR;}
+{notalpha}		{ printf("%s", yytext); yylval.print = yytext[0]; return OTHER;}
 . 						{ printf("[lex] unknonw char : %s\n", yytext); return(OTHER);}
 
 %%

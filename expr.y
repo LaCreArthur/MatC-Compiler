@@ -34,26 +34,27 @@
   char print;
 }
 
-%token INCR DECR
-%token <string> ID
-%token <print> OTHER
 %token <int_value> INT
+%token <string> ID
+%token INCR DECR PARENTH INDICE PRINT PRINTF PRINTM
+%token <print> OTHER
 %token <string> STR
 %type <codegen> Expr
 
-%left '+' '*' '-' '/'
-%right INCR DECR
+%right INCR DECR INDICE
+%left '+' '-'
+%left '*' '/'
+%nonassoc NEG
 
 %%
 
 axiom:
   //rien
   | axiom calc
-  | axiom other
   ;
 
 calc :
-    '\n'                  { printf("\n");}
+    other
   | Expr                  { //printf("  Match :~) !\n");
                             code = $1.code;
                             //printf("result id %s value = %d \n",$1.result->id,$1.result->value);
@@ -62,7 +63,27 @@ calc :
 
 /* GRAMMAIRE POUR CALCUL DE CONSTANTE */
 Expr:
-    Expr '+' Expr           { //printf("Expr -> Expr + Expr\n");
+    INT                     { //printf("Expr -> INT\n");
+                              //printf("%d",$1);
+                              temp_add(&$$.result, $1);
+                              $$.code = NULL;
+                            }
+  | ID                      { //printf("Expr -> ID\n");
+                              //printf("%s",$1);
+                              $$.result = symbol_add(tds, $1);
+                              $$.code = NULL;
+                            }
+  | matrix                  { //printf("Expr -> matrix\n");
+                              //printf("%s",$1);
+                              temp_add(&$$.result, 1); // matrix replace by 1 for dev test
+                              $$.code = NULL;
+                            }
+  | '-' Expr %prec NEG      {
+                              //printf("-%d",$2.result->value);
+                              $$ = $2;
+                              $$.result->value = -$2.result->value;
+                            }
+  | Expr '+' Expr           { //printf("Expr -> Expr + Expr\n");
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
@@ -101,27 +122,19 @@ Expr:
                                             $1.result, $1.code,
                                             tmp_symb, NULL);
                             }
-  | '-' Expr %prec '-'      {
-                              //printf("-%d",$2.result->value);
-                              $$ = $2;
-                              $$.result->value = -$2.result->value;
-                            }
-  | ID                      { //printf("Expr -> ID\n");
-                              //printf("%s",$1);
-                              $$.result = symbol_add(tds, $1);
-                              $$.code = NULL;
-                            }
-  | INT                     { //printf("Expr -> INT\n");
-                              //printf("%d",$1);
-                              temp_add(&$$.result, $1);
-                              $$.code = NULL;
-                            }
   ;
 
 other:
   OTHER
-  // | '(' other ')'           { printf("(%s)",$2);}
   | STR
+  | PARENTH
+  | PRINT
+  | PRINTF
+  | PRINTM
+  ;
+
+matrix:
+  ID INDICE
   ;
 
 %%
@@ -167,7 +180,8 @@ int main(int argc, char *argv[]){
   //    exit(EXIT_FAILURE);
   //  }
   extern int DEBUG;
-  if (argc == 3 && (strcmp(argv[2], "-debug") == 0)) {
+  if ((argc == 2 && strcmp(argv[1], "-debug") == 0) ||
+      (argc == 3 && strcmp(argv[2], "-debug") == 0)) {
     DEBUG = 1;
     printf("DEBUG MODE\n..........\n");
   }
@@ -178,7 +192,7 @@ int main(int argc, char *argv[]){
 
   printf("Enter a expression\n");
 
-  if (argc > 1){
+  if (argc > 1 && strcmp(argv[1], "-debug") != 0){
     yyin = fopen(argv[1],"r");
     if(yyin == NULL) perror("yacc_fopen ");
   }
