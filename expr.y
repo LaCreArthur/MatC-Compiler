@@ -41,7 +41,6 @@
 %type <codegen> Expr
 
 %left '+' '*' '-' '/'
-%left NEG
  // %right "++" "--"
 
 %%
@@ -56,7 +55,7 @@ axiom:
 
 ligne :
     '\n'                  { printf("\n");}
-  | Expr                  { //printf("  Match :~) !\n");
+  | Expr                  { printf("  Match :~) !\n");
                             code = $1.code;
                             printf("result id %s value = %d \n",$1.result->id,$1.result->value);
                           }
@@ -64,7 +63,7 @@ ligne :
 
 /* GRAMMAIRE POUR CALCUL DE CONSTANTE */
 Expr:
-    Expr '+' Expr           { //printf("Expr -> Expr + Expr\n");
+    Expr '+' Expr           { printf("Expr -> Expr + Expr\n");
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
@@ -84,7 +83,8 @@ Expr:
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | '(' Expr ')'            { //printf("Expr -> ( Expr )\n");
+  | '(' Expr ')'            { printf("Expr -> ( Expr )\n");
+                              $$ = $2;
                             }
   | Expr '+''+'             { //printf("Expr -> Expr++\n");
                               struct symbol* tmp_symb = (struct symbol*)calloc(1,sizeof(struct symbol));
@@ -100,7 +100,7 @@ Expr:
                                             $1.result, $1.code,
                                             tmp_symb, NULL);
                             }
-  | '-' Expr %prec NEG      {
+  | '-' Expr %prec '-'      {
                               printf("-%d",$2.result->value);
                               $$ = $2;
                               $$.result->value = -$2.result->value;
@@ -110,7 +110,7 @@ Expr:
                               $$.code = NULL;
                               printf("%s",$1);
                             }
-  | INT                     { //printf("Expr -> INT\n");
+  | INT                     { printf("Expr -> INT\n");
                               printf("%d",$1);
                               temp_add(&$$.result, $1);
                               $$.code = NULL;

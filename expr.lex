@@ -22,8 +22,8 @@ int						{digit}+
 exp						[Ee][+-]?{digit}
 float					{int}("."{int})?{exp}?
 
-op						[*/+-]
-notalpha			[()~|\[\]\{\};\=,"]
+op						[*/+()-]
+notalpha			[~|\[\]\{\};\=,"]
 predefid			matrix|int|float|main
 keyword 	   	else|if|for|while|matrix
 
@@ -33,14 +33,14 @@ keyword 	   	else|if|for|while|matrix
 {float}				{if(DEBUG) printf("(float)%s", yytext); yylval.int_value = atof(yytext); return(INT);}
 {op}					{if(DEBUG) printf("(op)%s", yytext); return yytext[0];}
 
-	/*
+
 {notlexunit}  {if(DEBUG) printf("(!lex)%s", yytext); yylval.print = yytext[0]; return OTHER;}
 {notalpha}		{if(DEBUG) printf("(!al)%s", yytext); yylval.print = yytext[0]; return(OTHER);}
 
 {predefid}		{if(DEBUG) printf("(pre)%s", yytext); yylval.string = yytext; return STR;}
 {keyword}			{if(DEBUG) printf("(key)%s", yytext); yylval.string = yytext; return STR;}
 {ident}				{if(DEBUG) printf("(ident)%s", yytext); yylval.string = yytext; return ID;}
-{comment}     {if(DEBUG) printf("_com_"); yylval.string = yytext; return STR;} */
+{comment}     {if(DEBUG) printf("_com_"); yylval.string = yytext; return STR;}
 
 \n						{if(DEBUG) printf("(\\n)%s", yytext); return yytext[0];}
 . 						{ printf("[lex] unknonw char : %s\n", yytext); return(OTHER);}
