@@ -40,7 +40,6 @@
 %token <int_value> INT
 %token <string> STR
 %type <codegen> Expr
-%type <string> other
 
 %left '+' '*' '-' '/'
 %right INCR DECR
@@ -57,7 +56,7 @@ calc :
     '\n'                  { printf("\n");}
   | Expr                  { //printf("  Match :~) !\n");
                             code = $1.code;
-                            // printf("result id %s value = %d \n",$1.result->id,$1.result->value);
+                            //printf("result id %s value = %d \n",$1.result->id,$1.result->value);
                           }
   ;
 
@@ -120,9 +119,9 @@ Expr:
   ;
 
 other:
-  OTHER                     { printf("%c",$1);}
+  OTHER
   // | '(' other ')'           { printf("(%s)",$2);}
-  | STR                     { printf("%s",$1);}
+  | STR
   ;
 
 %%
@@ -167,10 +166,11 @@ int main(int argc, char *argv[]){
   //    fprintf(stderr," usage : %s <file.cpp> [-debug]\n", argv[0]);
   //    exit(EXIT_FAILURE);
   //  }
-   if (argc == 3 && (strcmp(argv[2], "-debug") == 0)) {
-     #define DEBUG 1
-     printf("DEBUG MODE\n..........\n");
-   }
+  extern int DEBUG;
+  if (argc == 3 && (strcmp(argv[2], "-debug") == 0)) {
+    DEBUG = 1;
+    printf("DEBUG MODE\n..........\n");
+  }
 
   extern int yylex();
   // extern int yyparse();

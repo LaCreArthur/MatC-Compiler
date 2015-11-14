@@ -9,6 +9,7 @@
 #define SIMPLELEX {"else","if","while","for",","(",")","*","+",",","-","/",";",=","[","]","{","}"
 #define SIMPLELEX_SIZE 17}
 
+int DEBUG = 0;
 %}
 
 comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
@@ -31,14 +32,14 @@ keyword 	   	else|if|for|while|matrix
 
 %%
 
+{notlexunit}  {if(DEBUG) printf("%s", yytext);}
+
 {int}					{if(DEBUG) printf("(int)%s", yytext); yylval.int_value = atoi(yytext); return(INT);}
 {float}				{if(DEBUG) printf("(float)%s", yytext); yylval.int_value = atof(yytext); return(INT);}
 {incr}				{if(DEBUG) printf("(op)%s", yytext); return INCR;}
 {decr}				{if(DEBUG) printf("(op)%s", yytext); return DECR;}
 {op}					{if(DEBUG) printf("(op)%s", yytext); return yytext[0];}
 
-
-{notlexunit}  {if(DEBUG) printf("(!lex)%s", yytext); yylval.print = yytext[0]; return OTHER;}
 {notalpha}		{if(DEBUG) printf("(!al)%s", yytext); yylval.print = yytext[0]; return OTHER;}
 
 {predefid}		{if(DEBUG) printf("(pre)%s", yytext); yylval.string = yytext; return STR;}
