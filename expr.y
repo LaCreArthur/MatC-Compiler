@@ -19,7 +19,8 @@
 
   struct symbol* tds;
   struct quad* code;
-  struct symbol* tmp;
+  struct symbol* tmp_symb;
+  struct quad* tmp_quad;
 
 %}
 
@@ -40,6 +41,7 @@
 %type <codegen> Expr
 
 %left '+' '*' '-' '/'
+%left NEG
  // %right "++" "--"
 
 %%
@@ -56,7 +58,7 @@ ligne :
     '\n'                  { printf("\n");}
   | Expr                  { //printf("  Match :~) !\n");
                             code = $1.code;
-                            //printf("result id %s value = %d \n",$1.result->id,$1.result->value);
+                            printf("result id %s value = %d \n",$1.result->id,$1.result->value);
                           }
   ;
 
@@ -85,20 +87,23 @@ Expr:
   | '(' Expr ')'            { //printf("Expr -> ( Expr )\n");
                             }
   | Expr '+''+'             { //printf("Expr -> Expr++\n");
-                              temp_add(&tmp, 1);
+                              struct symbol* tmp_symb = (struct symbol*)calloc(1,sizeof(struct symbol));
+                              temp_add(&tmp_symb, 1);
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
-                                            tmp, NULL);
+                                            tmp_symb, NULL);
                             }
   | Expr '-''-'             { //printf("Expr -> Expr--\n");
-                              struct symbol* tmp = (struct symbol*)malloc(sizeof(struct symbol));
-                              temp_add(&tmp, -1);
+                              struct symbol* tmp_symb = (struct symbol*)calloc(1,sizeof(struct symbol));
+                              temp_add(&tmp_symb, -1);
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
-                                            tmp, NULL);
+                                            tmp_symb, NULL);
                             }
-  | '-' Expr %prec '-'      {
-                                
+  | '-' Expr %prec NEG      {
+                              printf("-%d",$2.result->value);
+                              $$ = $2;
+                              $$.result->value = -$2.result->value;
                             }
   | ID                      { //printf("Expr -> ID\n");
                               $$.result = symbol_add(tds, $1);
@@ -175,7 +180,6 @@ int main(int argc, char *argv[]){
   // symbol_print(tds);
   // printf("code :\n");
   // quad_print(code);
-
   quad_free(code);
   symbol_free(tds);
 
