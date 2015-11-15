@@ -52,7 +52,7 @@ void symbol_free (struct symbol* list){
   while (list != NULL)
    {
       tmp = list;
-      printf("symbol free %s\n", list->id);
+      //printf("symbol free %s\n", list->id);
       list = list->next;
       free(tmp->id);
       free(tmp);
