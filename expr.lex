@@ -10,7 +10,6 @@ int DEBUG = 0;
 
 comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
 escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"|"\n"
-notlexunit		" "|{escapesec}
 
 char		    	[a-zA-Z]
 digit					[0-9]
@@ -24,7 +23,7 @@ incr					"++"
 decr					"--"
 parenth				"()"
 op						[*/+()-]
-notalpha			[~|\[\]\{\};,"=\*\/+()-]
+notalpha			[~|\[\];,"=\*\/+()-]
 predefid			matrix|int|float|main
 keyword 	   	else|if|for|while|matrix|return
 
@@ -35,7 +34,10 @@ printmat			printmat"("{ident}")"
 
 %%
 
-{notlexunit}  { printf("%s", yytext);}
+[ ]						{ printf(" "); return BLK;}
+"int"					{	printf("int"); return T_INT;}
+"main"				{	printf("main"); return MAIN;}
+{escapesec}   { printf("%s", yytext);}
 
 {int}					{ printf("%s", yytext); yylval.int_value = atoi(yytext); return INT;}
 {float}				{ printf("%s", yytext); yylval.int_value = atof(yytext); return INT;}
@@ -55,6 +57,8 @@ printmat			printmat"("{ident}")"
 {ident}				{if(DEBUG) printf(" id_");  printf("%s", yytext); yylval.string = yytext; return ID;}
 
 {comment}     { printf("%s", yytext); yylval.string = yytext; return STR;}
+[{]						{ printf("{"); return LBRK;}
+[}]						{ printf("}"); return RBRK;}
 {notalpha}		{ printf("%s", yytext); yylval.print = yytext[0]; return OTHER;}
 . 						{ printf("[lex] unknonw char : %s\n", yytext); return(OTHER);}
 

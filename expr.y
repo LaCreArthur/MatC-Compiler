@@ -36,10 +36,13 @@
 
 %token <int_value> INT
 %token <string> ID
+%token BLK T_INT MAIN
+%token LBRK RBRK
 %token INCR DECR PARENTH INDICE PRINT PRINTF PRINTM
+
 %token <print> OTHER
 %token <string> STR
-%type <codegen> Expr
+%type <codegen> expr
 
 %right INCR DECR INDICE
 %left '+' '-'
@@ -50,72 +53,85 @@
 
 axiom:
   //rien
-  | axiom calc
+  | axiom main
   ;
 
-calc :
+main:
+  T_INT BLK MAIN PARENTH LBRK block
+  |  T_INT BLK MAIN BLK PARENTH LBRK block
+  |  T_INT BLK MAIN BLK PARENTH BLK LBRK block
+  |  T_INT BLK MAIN PARENTH BLK LBRK block
+  ;
+
+block:
+   ligne block
+  | RBRK
+  ;
+
+ligne :
     other
-  | Expr                  { //printf("  Match :~) !\n");
+  | expr                  { //printf("  Match :~) !\n");
                             code = $1.code;
                             //printf("result id %s value = %d \n",$1.result->id,$1.result->value);
                           }
   ;
 
+
 /* GRAMMAIRE POUR CALCUL DE CONSTANTE */
-Expr:
-    INT                     { //printf("Expr -> INT\n");
+expr:
+    INT                     { //printf("expr -> INT\n");
                               //printf("%d",$1);
                               temp_add(&$$.result, $1);
                               $$.code = NULL;
                             }
-  | ID                      { //printf("Expr -> ID\n");
+  | ID                      { //printf("expr -> ID\n");
                               //printf("%s",$1);
                               $$.result = symbol_add(tds, $1);
                               $$.code = NULL;
                             }
-  | matrix                  { //printf("Expr -> matrix\n");
+  | matrix                  { //printf("expr -> matrix\n");
                               //printf("%s",$1);
                               temp_add(&$$.result, 1); // matrix replace by 1 for dev test
                               $$.code = NULL;
                             }
-  | '-' Expr %prec NEG      {
+  | '-' expr %prec NEG      {
                               //printf("-%d",$2.result->value);
                               $$ = $2;
                               $$.result->value = -$2.result->value;
                             }
-  | Expr '+' Expr           { //printf("Expr -> Expr + Expr\n");
+  | expr '+' expr           { //printf("expr -> expr + expr\n");
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | Expr '-' Expr           { //printf("Expr -> Expr - Expr\n");
+  | expr '-' expr           { //printf("expr -> expr - expr\n");
                               expr_add('-', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | Expr '*' Expr           { //printf("Expr -> Expr * Expr\n");
+  | expr '*' expr           { //printf("expr -> expr * expr\n");
                               expr_add('*', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | Expr '/' Expr           { //printf("Expr -> Expr / Expr\n");
+  | expr '/' expr           { //printf("expr -> expr / expr\n");
                               expr_add('/', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             $3.result, $3.code);
                             }
-  | '(' Expr ')'            { //printf("Expr -> ( Expr )\n");
+  | '(' expr ')'            { //printf("expr -> ( expr )\n");
                               $$ = $2;
                             }
 
 // ajouter un token de fin apres ++ et --, ils ne sont suivit d'aucune autre operations (conflit de expr-- avec expr-'-expr')
-  | Expr INCR               { //printf("Expr -> Expr++\n");
+  | expr INCR               { //printf("expr -> expr++\n");
                               struct symbol* tmp_symb = (struct symbol*)calloc(1,sizeof(struct symbol));
                               temp_add(&tmp_symb, 1);
                               expr_add('+', &$$.result, &$$.code,
                                             $1.result, $1.code,
                                             tmp_symb, NULL);
                             }
-  | Expr DECR               { //printf("Expr -> Expr--\n");
+  | expr DECR               { //printf("expr -> expr--\n");
                               struct symbol* tmp_symb = (struct symbol*)calloc(1,sizeof(struct symbol));
                               temp_add(&tmp_symb, -1);
                               expr_add('+', &$$.result, &$$.code,
@@ -131,6 +147,9 @@ other:
   | PRINT
   | PRINTF
   | PRINTM
+  | BLK
+  | LBRK block
+  | T_INT
   ;
 
 matrix:
