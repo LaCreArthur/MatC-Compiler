@@ -36,8 +36,7 @@
 
 %token <int_value> INT
 %token <string> ID
-%token BLK T_INT MAIN
-%token LBRK RBRK
+%token T_INT MAIN
 %token INCR DECR PARENTH INDICE PRINT PRINTF PRINTM
 
 %token <print> OTHER
@@ -57,25 +56,30 @@ axiom:
   ;
 
 main:
-  T_INT BLK MAIN PARENTH LBRK block
-  |  T_INT BLK MAIN BLK PARENTH LBRK block
-  |  T_INT BLK MAIN BLK PARENTH BLK LBRK block
-  |  T_INT BLK MAIN PARENTH BLK LBRK block
+  T_INT MAIN '(' ')' '{' block
   ;
 
 block:
    ligne block
-  | RBRK
+  | '}'
   ;
 
 ligne :
     other
+  | stmt
+  ;
+
+stmt:
+  ID '=' expr             {
+                            printf("id = expr");
+                            code = $3.code;
+                            symbol_add(tds, $1);
+                          }
   | expr                  { //printf("  Match :~) !\n");
                             code = $1.code;
                             //printf("result id %s value = %d \n",$1.result->id,$1.result->value);
                           }
   ;
-
 
 /* GRAMMAIRE POUR CALCUL DE CONSTANTE */
 expr:
@@ -147,8 +151,9 @@ other:
   | PRINT
   | PRINTF
   | PRINTM
-  | BLK
-  | LBRK block
+  | '='
+  | ';'
+  | '{' block
   | T_INT
   ;
 
@@ -175,8 +180,13 @@ void temp_add(struct symbol** result, float value){
 void expr_add(char op, struct symbol** res_result, struct quad** res_code,
                        struct symbol* arg1_result, struct quad* arg1_code,
                        struct symbol* arg2_result, struct quad* arg2_code) {
-  *res_result = symbol_newtemp(&tds);
-  (*res_result)->value = op_calc(op, arg1_result, arg2_result);
+  if (op != '=') {
+    *res_result = symbol_newtemp(&tds);
+    (*res_result)->value = op_calc(op, arg1_result, arg2_result);
+  } else {
+    *res_result = symbol_add(tds,(*res_result)->id);
+    (*res_result)->value = arg1_result->value;
+  }
   *res_code = arg1_code;
   quad_add(res_code,arg2_code);
   quad_add(res_code, quad_gen( op,arg1_result,arg2_result,*res_result));
@@ -209,7 +219,7 @@ int main(int argc, char *argv[]){
   // extern int yyparse();
   extern FILE *yyin;
 
-  printf("Enter a expression\n");
+  printf("Welcome\n");
 
   if (argc > 1 && strcmp(argv[1], "-debug") != 0){
     yyin = fopen(argv[1],"r");
@@ -217,10 +227,10 @@ int main(int argc, char *argv[]){
   }
   yyparse();
 
-  // printf("table :\n");
-  // symbol_print(tds);
-  // printf("code :\n");
-  // quad_print(code);
+  printf("table :\n");
+  symbol_print(tds);
+  printf("code :\n");
+  quad_print(code);
   quad_free(code);
   symbol_free(tds);
 

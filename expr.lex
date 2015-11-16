@@ -10,7 +10,7 @@ int DEBUG = 0;
 
 comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
 escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"|"\n"
-
+blank					([ ])+
 char		    	[a-zA-Z]
 digit					[0-9]
 ident		    	{char}({char}|{digit})*
@@ -21,9 +21,8 @@ indice				("["{int}"]")+
 
 incr					"++"
 decr					"--"
-parenth				"()"
 op						[*/+()-]
-notalpha			[~|\[\];,"=\*\/+()-]
+notalpha			[\(\)\{\}\~\|\[\]\;\,\"\=\/]
 predefid			matrix|int|float|main
 keyword 	   	else|if|for|while|matrix|return
 
@@ -34,7 +33,7 @@ printmat			printmat"("{ident}")"
 
 %%
 
-[ ]						{ printf(" "); return BLK;}
+{blank}				{ printf("%s",yytext);}
 "int"					{	printf("int"); return T_INT;}
 "main"				{	printf("main"); return MAIN;}
 {escapesec}   { printf("%s", yytext);}
@@ -44,12 +43,11 @@ printmat			printmat"("{ident}")"
 
 {incr}				{ printf("%s", yytext); return INCR;}
 {decr}				{ printf("%s", yytext); return DECR;}
-{parenth}			{ printf("%s", yytext); return PARENTH;}
 {op}					{ printf("%s", yytext); return yytext[0];}
 
-{indice}			{if(DEBUG) printf(" ind_"); printf("%s", yytext); return INDICE;}
-{predefid}		{if(DEBUG) printf(" pdi_"); printf("%s", yytext); yylval.string = yytext; return STR;}
-{keyword}			{if(DEBUG) printf(" kw_");  printf("%s", yytext); yylval.string = yytext; return STR;}
+{indice}			{ if(DEBUG) printf(" ind_"); printf("%s", yytext); return INDICE;}
+{predefid}		{ if(DEBUG) printf(" pdi_"); printf("%s", yytext); yylval.string = yytext; return STR;}
+{keyword}			{ if(DEBUG) printf(" kw_");  printf("%s", yytext); yylval.string = yytext; return STR;}
 {print}				{ if(DEBUG) printf(" prt_");  printf("%s", yytext); return PRINT;}
 {printf}			{ if(DEBUG) printf(" prtf_"); printf("%s", yytext); return PRINTF;}
 {printmat}		{ if(DEBUG) printf(" prtm_"); printf("%s", yytext); return PRINTM;}
@@ -57,9 +55,7 @@ printmat			printmat"("{ident}")"
 {ident}				{if(DEBUG) printf(" id_");  printf("%s", yytext); yylval.string = yytext; return ID;}
 
 {comment}     { printf("%s", yytext); yylval.string = yytext; return STR;}
-[{]						{ printf("{"); return LBRK;}
-[}]						{ printf("}"); return RBRK;}
-{notalpha}		{ printf("%s", yytext); yylval.print = yytext[0]; return OTHER;}
+{notalpha}		{ printf("%s", yytext); return yytext[0];}
 . 						{ printf("[lex] unknonw char : %s\n", yytext); return(OTHER);}
 
 %%
