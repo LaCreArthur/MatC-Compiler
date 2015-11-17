@@ -34,8 +34,10 @@ void quad_add (struct quad** list, struct quad* new){
 void quad_print (struct quad* list){
 	if (list == NULL) printf("quad_print : code null\n");
 	while (list != NULL) {
-		if(list->arg1 != NULL || list->arg2 != NULL || list->res != NULL)
-			printf("%c %7s %7s %7s\n", list->op, list->arg1->id, list->arg2->id, list->res->id);
+		if(list->arg1 != NULL && list->res != NULL)
+			printf("%c %7s", list->op, list->arg1->id);
+			if (list->arg2 != NULL) printf(" %7s", list->arg2->id); // when id = expr, arg2 is NULL
+			printf(" %7s\n", list->res->id);
 		list = list->next;
 	}
 }
@@ -47,9 +49,6 @@ void quad_free (struct quad* list){
 			tmp = list;
 			printf("quad free %c\n", list->op);
 			list = list->next;
-			// if(tmp->arg1 != NULL) symbol_free(tmp->arg1);
-			// if(tmp->arg1 != NULL) symbol_free(tmp->arg2);
-			// if(tmp->arg1 != NULL) symbol_free(tmp->res);
 			free(tmp);
 	 }
 }

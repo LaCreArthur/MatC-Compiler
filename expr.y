@@ -71,7 +71,11 @@ stmnt:
   ';'
 
   | ID '=' E ';'                  { //printf("  Match :~) !\n");
-                                    printf("(%s = %f)",$1 ,$3.result->value);
+                                    quad_add(&code, $3.code); // store the E code
+                                    struct symbol* new_id = symbol_add(tds, $1); // add the id in the tds
+                                    new_id->value = $3.result->value; // copie the E value into the id value
+                                    quad_add(&code, quad_gen('=', $3.result,NULL, new_id)); // store this stmnt code
+                                    printf("(%s = %f)",$1 ,$3.result->value); // verification
                                   }
   | E ';'                         { //printf("  Match :~) !\n");
 				                            quad_add(&code, $1.code);
