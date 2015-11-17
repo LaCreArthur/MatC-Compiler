@@ -43,7 +43,7 @@ struct symbol* symbol_add (struct symbol* symb, char* id) {
 void symbol_print (struct symbol* list){
   if (list == NULL) printf("table null\n");
 	while (list != NULL) {
-		printf("%s %f \n", list->id, list->value);
+		printf("%s %s = %.2f\n",(list->isFloat ? "float" : "int"), list->id, list->value);
     list = list->next;
 	}
 }

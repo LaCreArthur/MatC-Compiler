@@ -34,11 +34,11 @@
 	} codegen;
 }
 
-%token <int_value> INT
+%token <int_value> INT TYPE
 %token <float_value> FLOAT
 %token <str_value> ID
 %type <codegen> E
-%token T_INT T_FLOAT T_MATRIX MAIN
+%token MAIN
 %token '+' '-' '*' '/'
 %token '(' ')'
 %token INCR DECR
@@ -59,7 +59,7 @@ axiom:
 	;
 
 main:
-  T_INT MAIN '(' ')' '{' block
+  TYPE MAIN '(' ')' '{' block
   ;
 
 block:
@@ -70,12 +70,13 @@ block:
 stmnt:
   ';'
 
-  | ID '=' E ';'                  { //printf("  Match :~) !\n");
-                                    quad_add(&code, $3.code); // store the E code
-                                    struct symbol* new_id = symbol_add(tds, $1); // add the id in the tds
-                                    new_id->value = $3.result->value; // copie the E value into the id value
-                                    quad_add(&code, quad_gen('=', $3.result,NULL, new_id)); // store this stmnt code
-                                    printf("(%s = %f)",$1 ,$3.result->value); // verification
+  | TYPE ID '=' E ';'             { printf(" Type : %d !\n", $1);
+                                    quad_add(&code, $4.code); // store the E code
+                                    struct symbol* new_id = symbol_add(tds, $2); // add the id in the tds
+                                    new_id->value = $4.result->value; // copie the E value into the id value
+                                    new_id->isFloat = ($1 == 102 ? 1 : 0); // 102 is the int value of 'f' mean TYPE = float
+                                    quad_add(&code, quad_gen('=', $4.result,NULL, new_id)); // store this stmnt code
+                                    printf("(%s = %f)",$2 ,$4.result->value); // verification
                                   }
   | E ';'                         { //printf("  Match :~) !\n");
 				                            quad_add(&code, $1.code);
@@ -128,11 +129,13 @@ E:
 			                              printf("%d",$1);
 			                              temp_add(&$$.result, $1);
 			                              $$.code = NULL;
+                                    $$.result->isFloat = 0;
 			                            }
   | FLOAT                     		{ //printf("expr -> INT\n");
 			                              printf("%f",$1);
 			                              temp_add(&$$.result, $1);
 			                              $$.code = NULL;
+                                    $$.result->isFloat = 1;
 			                            }
 	| ID                     			  { //printf("expr -> ID\n");
 																		//printf("ID = %s",$1);
@@ -164,6 +167,7 @@ void expr_add(char op, struct symbol** res_result, struct quad** res_code,
                        struct symbol* arg2_result, struct quad* arg2_code) {
   *res_result = symbol_newtemp(&tds);
   (*res_result)->value = op_calc(op, arg1_result, arg2_result);
+  (*res_result)->isFloat = arg1_result->isFloat;
   *res_code = arg1_code;
   quad_add(res_code,arg2_code);
   quad_add(res_code, quad_gen( op,arg1_result,arg2_result,*res_result));

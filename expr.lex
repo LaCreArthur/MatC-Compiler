@@ -29,9 +29,7 @@ printmat			printmat"("{ident}")"
 %%
 
 {escapesec}   { printf("%s", yytext);}
-"int"					{	printf("int"); return T_INT;}
-"float"				{	printf("int"); return T_FLOAT;}
-"matrix"			{	printf("int"); return T_MATRIX;}
+{predefid}    { printf("%s", yytext); yylval.int_value = yytext[0]; return TYPE;}
 "main"				{	printf("main"); return MAIN;}
 {int}					{ yylval.int_value = atoi(yytext);return(INT);}
 {float}				{ yylval.float_value=atof(yytext);return(FLOAT);}
