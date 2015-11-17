@@ -14,7 +14,7 @@
   void expr_add(char op, struct symbol** res_result, struct quad** res_code,
                          struct symbol* arg1_result, struct quad* arg1_code,
                          struct symbol* arg2_result, struct quad* arg2_code);
-  int op_calc(char op, struct symbol* arg1, struct symbol* arg2);
+  float op_calc(char op, struct symbol* arg1, struct symbol* arg2);
   //int yydebug=1;
 
   struct symbol* tds;
@@ -26,6 +26,7 @@
 
 %union {
   int int_value;
+  float float_value;
   char* str_value;
 	struct {
 		struct symbol* result;
@@ -33,10 +34,11 @@
 	} codegen;
 }
 
-%token <int_value> NUM
+%token <int_value> INT
+%token <float_value> FLOAT
 %token <str_value> ID
 %type <codegen> E
-%token T_INT MAIN
+%token T_INT T_FLOAT T_MATRIX MAIN
 %token '+' '-' '*' '/'
 %token '(' ')'
 %token INCR DECR
@@ -67,13 +69,13 @@ block:
 
 stmnt:
   ';'
-  
+
   | ID '=' E ';'                  { //printf("  Match :~) !\n");
-                                    printf("(%s = %d)",$1 ,$3.result->value);
+                                    printf("(%s = %f)",$1 ,$3.result->value);
                                   }
   | E ';'                         { //printf("  Match :~) !\n");
 				                            quad_add(&code, $1.code);
-				                            printf("(%s = %d)",$1.result->id,$1.result->value);
+				                            printf("(%s = %f)",$1.result->id,$1.result->value);
 				                          }
   ;
 
@@ -118,8 +120,13 @@ E:
 			                                            tmp_symb, NULL);
 			                            }
   | '(' E ')'               			{$$ = $2;}
-  | NUM                     			{ //printf("expr -> INT\n");
-			                              //printf("%d",$1);
+  | INT                     			{ //printf("expr -> INT\n");
+			                              printf("%d",$1);
+			                              temp_add(&$$.result, $1);
+			                              $$.code = NULL;
+			                            }
+  | FLOAT                     		{ //printf("expr -> INT\n");
+			                              printf("%f",$1);
 			                              temp_add(&$$.result, $1);
 			                              $$.code = NULL;
 			                            }
@@ -167,7 +174,7 @@ void stmt_add(char op, struct symbol** res_result, struct quad** res_code,
   quad_add(res_code, quad_gen( op,arg1_result,NULL,*res_result));
 }
 
-int op_calc(char op, struct symbol* arg1, struct symbol* arg2){
+float op_calc(char op, struct symbol* arg1, struct symbol* arg2){
   switch (op) {
     case '+': return arg1->value + arg2->value;
     case '*': return arg1->value * arg2->value;

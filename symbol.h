@@ -4,7 +4,7 @@
 struct symbol {
       char* id;
       bool isConstant;
-      int value;
+      float value;
       struct symbol* next;
 };
 

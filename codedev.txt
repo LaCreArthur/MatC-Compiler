@@ -1,4 +1,4 @@
 int main() {
 	/*bonsoir*/
-	a = 1 + 1 ;
+	a = 1.5 + 1.0 ;
 }
