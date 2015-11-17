@@ -1,6 +1,7 @@
 # MatC-Compiler
 projet de compilation
 
+<<<<<<< HEAD
 ## branche Analyse_lex :
   but : faire une analyse lex complete du language : transformer tout le code en tokens exploitables
   l'option -debug doit afficher un identifiant de token devant chacun d'eux (ex: main -> kw_main pour keyword)
@@ -23,3 +24,6 @@ projet de compilation
   quelle quantité de code mips est necessaire?
     -> coder uniquement les resultats et les prints ?
   ...
+=======
+## actuellement sur branche Analyse_synt 
+>>>>>>> 4d3d06dfbecf2f211327c759545fa74a3e44e698
