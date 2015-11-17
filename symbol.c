@@ -16,25 +16,26 @@ struct symbol* symbol_alloc() {
 struct symbol* symbol_newtemp(struct symbol** tds) {
     static int nb_symbol = 0;
     char temp_name[SYMBOL_MAX_NAME];
-    char* tmp = malloc(SYMBOL_MAX_NAME * sizeof(char));
-    if (tmp == NULL) perror("symbol_newtemp fail : ");
+    // char* tmp = malloc(SYMBOL_MAX_NAME * sizeof(char));
+    // if (tmp == NULL) perror("symbol_newtemp fail : ");
     snprintf(temp_name, SYMBOL_MAX_NAME, "temp_%d", nb_symbol);
-    strcpy(tmp, temp_name);
+    // strcpy(tmp, temp_name);
     nb_symbol++;
-    return symbol_add(*tds, tmp);
+    return symbol_add(*tds, temp_name);
 }
 
 struct symbol* symbol_add (struct symbol* symb, char* id) {
   struct symbol* temp = symb;
+  char *id_dup = strdup(id);
   if (temp == NULL) {
       temp = symbol_alloc();
-      temp->id = id;
+      temp->id = id_dup;
       return temp;
   }
   else {
       while (temp->next != NULL) temp = temp->next;
       temp->next = symbol_alloc();
-      temp->next->id = id;
+      temp->next->id = id_dup;
       return temp->next;
   }
 }

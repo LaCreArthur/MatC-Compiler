@@ -6,8 +6,8 @@ int main() {
 	IA = IA[1;0][1;0];
 	IA[0][1] = -IA[0][1];
 	IA[1][0] = -IA[1][0];
-	/* Calcul du déterminant de A */
-	det = 1/(A[0][0]*A[1][1]-A[0][1]*A[1][0]);
+	/* Calcul du déterminant de A : modification du / en * pour l'instant (div par 0) */
+	det = 1*(A[0][0]*A[1][1]-A[0][1]*A[1][0]);
 	IA = det*IA;
 	/* Calcul de X */
 	X = IA*B;

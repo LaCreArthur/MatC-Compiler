@@ -1,0 +1,4 @@
+int main() {
+	/*bonsoir*/
+	a = 1 + 1 ;
+}
