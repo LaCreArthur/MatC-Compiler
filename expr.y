@@ -37,9 +37,9 @@
 
 %token <int_value> INT
 %token <float_value> FLOAT
-%token <str_value> ID TYPE INCRorDECR
+%token <str_value> ID TYPE INCRorDECR STR
 %type <codegen> E
-%token MAIN
+%token MAIN PRINT PRINTF PRINTM
 %token '+' '-' '*' '/'
 %token '(' ')'
 %token END
@@ -76,16 +76,16 @@ stmnt:
                                     new_id->value = $4.result->value; // copie the E value into the id value
                                     new_id->isFloat = ($1[0] == 'f' ? 1 : 0); // 'f' mean TYPE = float
                                     quad_add(&code, quad_gen('=', $4.result,NULL, new_id)); // store this stmnt code
-                                    printf("// %s = %.2f",$2 ,$4.result->value); // verification
+                                    printf(" (%s = %.2f)",$2 ,$4.result->value); // verification
                                   }
   | ID '=' E ';'                  {
                                     struct symbol* id;
-                                    printf("// look for %s ... ", $1);
+                                    printf(" (look for %s ... ", $1);
                                     if ((id = symbol_find(tds,$1)) != NULL) {
-                                      printf("found !");
+                                      printf("found !)");
                                       id->value = $3.result->value; // copie the E value into the id value
                                       quad_add(&code, quad_gen('=', $3.result,NULL, id)); // store this stmnt code
-                                      printf("// %s = %.2f",$1 ,$3.result->value); // verification
+                                      printf(" (%s = %.2f)",$1 ,$3.result->value); // verification
                                     }
                                     else {
                                       fprintf(stderr,"%s:%d: error: '%s' undeclared (first use in this function)",filename, line, $1);
@@ -103,9 +103,19 @@ stmnt:
                                     quad_add(&code, $1.code);
 			                            }
   | E ';'                         { //printf("  Match :~) !\n");
+				                            //printf("// %s = %.2f",$1.result->id,$1.result->value);
 				                            quad_add(&code, $1.code);
-				                            printf("// %s = %.2f",$1.result->id,$1.result->value);
 				                          }
+  | PRINT '(' ID ')' ';'          {
+                                    printf(" PRINT match ! \n");
+                                    // do a specifique quad or directly a mips code ?
+                                  }
+  | PRINTF '(' STR ')' ';'        {
+                                    printf(" PRINTF match ! \n");
+                                  }
+  | PRINTM '(' ID ')' ';'         {
+                                    printf(" PRINTM match ! \n");
+                                  }
   ;
 
 E:
@@ -150,13 +160,13 @@ E:
 	| ID                     			  { //printf("expr -> ID\n");
 																		//printf("ID = %s",$1);
                                     struct symbol* id;
-                                    printf("// look for %s ... ", $1);
+                                    printf(" (look for %s ... ", $1);
                                     if ((id = symbol_find(tds,$1)) != NULL) {
-                                      printf("found !");
+                                      printf("found !)");
                                       $$.result = id;
                                     }
                                     else {
-                                      printf("not found !");
+                                      printf("not found !)");
   																		$$.result = symbol_add(tds, $1);
                                     }
   																	$$.code = NULL;
