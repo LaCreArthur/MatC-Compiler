@@ -42,8 +42,8 @@ struct symbol* symbol_add (struct symbol* symb, char* id) {
 
 struct symbol* symbol_find(struct symbol* tds, char* id){
   struct symbol* temp = tds;
-  while (temp->next != NULL) {
-    // printf("symbol_find : %s", )
+  while (temp != NULL) {
+    // printf("\nsymbol_find : compare %s and %s", temp->id, id);
     if (strcmp(temp->id, id) == 0) return temp;
     else temp = temp->next;
   }

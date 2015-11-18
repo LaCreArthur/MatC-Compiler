@@ -17,7 +17,7 @@ op						[+*/()=-]
 noaplha				[\'\"\{\};]
 
 indice				("["{int}"]")+
-predefid			matrix|int|float
+types					matrix|int|float
 keyword 	   	else|if|for|while|matrix|return
 
 comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
@@ -31,13 +31,12 @@ printmat			printmat"("{ident}")"
 
 {newline}			{ printf("%s", yytext); line++;}
 {escapesec}   { printf("%s", yytext);}
-{predefid}    { printf("%s", yytext); yylval.int_value = yytext[0]; return TYPE;}
+{types}		    { printf("%s", yytext); yylval.str_value = yytext; return TYPE;}
 "main"				{	printf("main"); return MAIN;}
 {int}					{ yylval.int_value = atoi(yytext);return(INT);}
 {float}				{ yylval.float_value=atof(yytext);return(FLOAT);}
 {id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); yylval.str_value = strdup(yytext); return ID;}
-"++"					{ printf("%s", yytext); return INCR;}
-"--"					{ printf("%s", yytext); return DECR;}
+"++"|"--"			{ printf("%s", yytext); yylval.str_value = yytext; return INCRorDECR;}
 {op}					{ printf("%c", yytext[0]); return(yytext[0]);}
 {noaplha}			{ printf("%c", yytext[0]); return(yytext[0]);}
 

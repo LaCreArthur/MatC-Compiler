@@ -35,20 +35,19 @@
 	} codegen;
 }
 
-%token <int_value> INT TYPE
+%token <int_value> INT
 %token <float_value> FLOAT
-%token <str_value> ID
+%token <str_value> ID TYPE INCRorDECR
 %type <codegen> E
 %token MAIN
 %token '+' '-' '*' '/'
 %token '(' ')'
-%token INCR DECR
 %token END
 
 %left '+' '-'
 %left '*' '/'
 %left NEG
-%right INCR DECR
+%right INCRorDECR
 
 %start axiom
 
@@ -75,7 +74,7 @@ stmnt:
                                     quad_add(&code, $4.code); // store the E code
                                     struct symbol* new_id = symbol_add(tds, $2); // add the id in the tds
                                     new_id->value = $4.result->value; // copie the E value into the id value
-                                    new_id->isFloat = ($1 == 102 ? 1 : 0); // 102 is the int value of 'f' mean TYPE = float
+                                    new_id->isFloat = ($1[0] == 'f' ? 1 : 0); // 'f' mean TYPE = float
                                     quad_add(&code, quad_gen('=', $4.result,NULL, new_id)); // store this stmnt code
                                     printf("// %s = %.2f",$2 ,$4.result->value); // verification
                                   }
@@ -93,9 +92,19 @@ stmnt:
                                       exit(EXIT_FAILURE);
                                     }
                                   }
+  | E INCRorDECR	';'	      			{ //printf("expr -> expr++\n");
+                                    char op = ($2[0] == '+' ? '+' : '-'); // to add or remove 1
+                                    // a temp with value 1
+			                              struct symbol* incrOrDecr_tmp = (struct symbol*)calloc(1,sizeof(struct symbol));
+			                              temp_add(&incrOrDecr_tmp, 1);
+                                    // add a quad E = E +/- 1
+                                    quad_add(&$1.code, quad_gen( op,$1.result,incrOrDecr_tmp,$1.result));
+                                    $1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
+                                    quad_add(&code, $1.code);
+			                            }
   | E ';'                         { //printf("  Match :~) !\n");
 				                            quad_add(&code, $1.code);
-				                            printf("(%s = %.2f)",$1.result->id,$1.result->value);
+				                            printf("// %s = %.2f",$1.result->id,$1.result->value);
 				                          }
   ;
 
@@ -125,20 +134,6 @@ E:
 			                              $$ = $2;
 			                              $$.result->value = -$2.result->value;
 			                            }
-	| E INCR		               			{ //printf("expr -> expr++\n");
-			                              struct symbol* tmp_symb = (struct symbol*)calloc(1,sizeof(struct symbol));
-			                              temp_add(&tmp_symb, 1);
-			                              expr_add('+', &$$.result, &$$.code,
-			                                            $1.result, $1.code,
-			                                            tmp_symb, NULL);
-			                            }
-  | E DECR             					  { //printf("expr -> expr--\n");
-			                              struct symbol* tmp_symb = (struct symbol*)calloc(1,sizeof(struct symbol));
-			                              temp_add(&tmp_symb, -1);
-			                              expr_add('+', &$$.result, &$$.code,
-			                                            $1.result, $1.code,
-			                                            tmp_symb, NULL);
-			                            }
   | '(' E ')'               			{$$ = $2;}
   | INT                     			{ //printf("expr -> INT\n");
 			                              printf("%d",$1);
@@ -154,8 +149,17 @@ E:
 			                            }
 	| ID                     			  { //printf("expr -> ID\n");
 																		//printf("ID = %s",$1);
-																		$$.result = symbol_add(tds, $1);
-																		$$.code = NULL;
+                                    struct symbol* id;
+                                    printf("// look for %s ... ", $1);
+                                    if ((id = symbol_find(tds,$1)) != NULL) {
+                                      printf("found !");
+                                      $$.result = id;
+                                    }
+                                    else {
+                                      printf("not found !");
+  																		$$.result = symbol_add(tds, $1);
+                                    }
+  																	$$.code = NULL;
 																	}
   ;
 
