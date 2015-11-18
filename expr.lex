@@ -4,7 +4,7 @@
 #include "y.tab.h"
 
 int DEBUG = 0;
-
+int line = 1;
 %}
 
 number				[0-9]
@@ -21,13 +21,15 @@ predefid			matrix|int|float
 keyword 	   	else|if|for|while|matrix|return
 
 comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
-escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"|"\n"|([ ])+
+newline				"\n"
+escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"|([ ])+
 string				\"([^"])*\"
 print					print"("{int}")"
 printf				printf"("{string}")"
 printmat			printmat"("{ident}")"
 %%
 
+{newline}			{ printf("%s", yytext); line++;}
 {escapesec}   { printf("%s", yytext);}
 {predefid}    { printf("%s", yytext); yylval.int_value = yytext[0]; return TYPE;}
 "main"				{	printf("main"); return MAIN;}

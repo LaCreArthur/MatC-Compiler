@@ -21,7 +21,8 @@
   struct quad* code;
   struct symbol* tmp_symb;
   struct quad* tmp_quad;
-
+  extern int line;
+  char* filename;
 %}
 
 %union {
@@ -76,17 +77,25 @@ stmnt:
                                     new_id->value = $4.result->value; // copie the E value into the id value
                                     new_id->isFloat = ($1 == 102 ? 1 : 0); // 102 is the int value of 'f' mean TYPE = float
                                     quad_add(&code, quad_gen('=', $4.result,NULL, new_id)); // store this stmnt code
-                                    printf("(%s = %f)",$2 ,$4.result->value); // verification
+                                    printf("// %s = %.2f",$2 ,$4.result->value); // verification
                                   }
   | ID '=' E ';'                  {
-                                    printf("look for %s ... ", $1);
-                                    if (symbol_find(tds,$1) != NULL) {
+                                    struct symbol* id;
+                                    printf("// look for %s ... ", $1);
+                                    if ((id = symbol_find(tds,$1)) != NULL) {
                                       printf("found !");
+                                      id->value = $3.result->value; // copie the E value into the id value
+                                      quad_add(&code, quad_gen('=', $3.result,NULL, id)); // store this stmnt code
+                                      printf("// %s = %.2f",$1 ,$3.result->value); // verification
+                                    }
+                                    else {
+                                      fprintf(stderr,"%s:%d: error: '%s' undeclared (first use in this function)",filename, line, $1);
+                                      exit(EXIT_FAILURE);
                                     }
                                   }
   | E ';'                         { //printf("  Match :~) !\n");
 				                            quad_add(&code, $1.code);
-				                            printf("(%s = %f)",$1.result->id,$1.result->value);
+				                            printf("(%s = %.2f)",$1.result->id,$1.result->value);
 				                          }
   ;
 
@@ -138,7 +147,7 @@ E:
                                     $$.result->isFloat = 0;
 			                            }
   | FLOAT                     		{ //printf("expr -> INT\n");
-			                              printf("%f",$1);
+			                              printf("%.2f",$1);
 			                              temp_add(&$$.result, $1);
 			                              $$.code = NULL;
                                     $$.result->isFloat = 1;
@@ -220,6 +229,9 @@ int main(int argc, char *argv[]){
 
   if (argc > 1 && strcmp(argv[1], "-debug") != 0){
     yyin = fopen(argv[1],"r");
+    /* Read out the link to our file descriptor. */
+    filename = strdup(argv[1]);
+
     if(yyin == NULL) perror("yacc_fopen ");
   }
   yyparse();
