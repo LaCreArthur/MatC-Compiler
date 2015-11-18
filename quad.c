@@ -35,9 +35,9 @@ void quad_print (struct quad* list){
 	if (list == NULL) printf("quad_print : code null\n");
 	while (list != NULL) {
 		if(list->arg1 != NULL && list->res != NULL)
-			printf("%c %7s", list->op, list->arg1->id);
-			if (list->arg2 != NULL) printf(" %7s", list->arg2->id); // when id = expr, arg2 is NULL
-			printf(" %7s\n", list->res->id);
+			printf("%c %7s  ", list->op, list->arg1->id);
+			if (list->arg2 != NULL) printf("%7s  ", list->arg2->id); // when id = expr, arg2 is NULL
+			printf("%7s\n", list->res->id);
 		list = list->next;
 	}
 }

@@ -70,13 +70,19 @@ block:
 stmnt:
   ';'
 
-  | TYPE ID '=' E ';'             { printf(" Type : %d !\n", $1);
+  | TYPE ID '=' E ';'             { //printf(" Type : %d !\n", $1);
                                     quad_add(&code, $4.code); // store the E code
                                     struct symbol* new_id = symbol_add(tds, $2); // add the id in the tds
                                     new_id->value = $4.result->value; // copie the E value into the id value
                                     new_id->isFloat = ($1 == 102 ? 1 : 0); // 102 is the int value of 'f' mean TYPE = float
                                     quad_add(&code, quad_gen('=', $4.result,NULL, new_id)); // store this stmnt code
                                     printf("(%s = %f)",$2 ,$4.result->value); // verification
+                                  }
+  | ID '=' E ';'                  {
+                                    printf("look for %s ... ", $1);
+                                    if (symbol_find(tds,$1) != NULL) {
+                                      printf("found !");
+                                    }
                                   }
   | E ';'                         { //printf("  Match :~) !\n");
 				                            quad_add(&code, $1.code);
@@ -86,12 +92,12 @@ stmnt:
 
 E:
     E '+' E                 			{ //printf("expr -> expr + expr\n");
-			                               expr_add('+', &$$.result, &$$.code,
+			                              expr_add('+', &$$.result, &$$.code,
 			                                             $1.result, $1.code,
 			                                             $3.result, $3.code);
 			                            }
   | E '-' E                 			{ //printf("expr -> expr - expr\n");
-																		 expr_add('-', &$$.result, &$$.code,
+																		expr_add('-', &$$.result, &$$.code,
 																									 $1.result, $1.code,
 																									 $3.result, $3.code);
 																	}
@@ -220,7 +226,7 @@ int main(int argc, char *argv[]){
 
   printf("\ntable :\n");
   symbol_print(tds);
-  printf("code :\n");
+  printf("\ncode :\n");
   quad_print(code);
   quad_free(code);
   symbol_free(tds);

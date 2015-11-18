@@ -40,10 +40,20 @@ struct symbol* symbol_add (struct symbol* symb, char* id) {
   }
 }
 
+struct symbol* symbol_find(struct symbol* tds, char* id){
+  struct symbol* temp = tds;
+  while (temp->next != NULL) {
+    // printf("symbol_find : %s", )
+    if (strcmp(temp->id, id) == 0) return temp;
+    else temp = temp->next;
+  }
+  return NULL;
+}
+
 void symbol_print (struct symbol* list){
   if (list == NULL) printf("table null\n");
 	while (list != NULL) {
-		printf("%s %s = %.2f\n",(list->isFloat ? "float" : "int"), list->id, list->value);
+		printf("%s\t%s \t= %.2f\n",(list->isFloat ? "float" : "int"), list->id, list->value);
     list = list->next;
 	}
 }

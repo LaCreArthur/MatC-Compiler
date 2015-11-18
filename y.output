@@ -1,0 +1,551 @@
+Terminaux inutilisés dans la grammaire
+
+   END
+
+
+Grammaire
+
+    0 $accept: axiom $end
+
+    1 axiom: %empty
+    2      | main
+
+    3 main: TYPE MAIN '(' ')' '{' block
+
+    4 block: stmnt block
+    5      | '}'
+
+    6 stmnt: ';'
+    7      | TYPE ID '=' E ';'
+    8      | ID '=' E ';'
+    9      | E ';'
+
+   10 E: E '+' E
+   11  | E '-' E
+   12  | E '*' E
+   13  | E '/' E
+   14  | '-' E
+   15  | E INCR
+   16  | E DECR
+   17  | '(' E ')'
+   18  | INT
+   19  | FLOAT
+   20  | ID
+
+
+Terminaux, suivis des règles où ils apparaissent
+
+$end (0) 0
+'(' (40) 3 17
+')' (41) 3 17
+'*' (42) 12
+'+' (43) 10
+'-' (45) 11 14
+'/' (47) 13
+';' (59) 6 7 8 9
+'=' (61) 7 8
+'{' (123) 3
+'}' (125) 5
+error (256)
+INT (258) 18
+TYPE (259) 3 7
+FLOAT (260) 19
+ID (261) 7 8 20
+MAIN (262) 3
+INCR (263) 15
+DECR (264) 16
+END (265)
+NEG (266)
+
+
+Non-terminaux, suivis des règles où ils apparaissent
+
+$accept (22)
+    à gauche: 0
+axiom (23)
+    à gauche: 1 2, à droite: 0
+main (24)
+    à gauche: 3, à droite: 2
+block (25)
+    à gauche: 4 5, à droite: 3 4
+stmnt (26)
+    à gauche: 6 7 8 9, à droite: 4
+E (27)
+    à gauche: 10 11 12 13 14 15 16 17 18 19 20, à droite: 7 8 9 10
+    11 12 13 14 15 16 17
+
+
+État 0
+
+    0 $accept: . axiom $end
+
+    TYPE  décalage et aller à l'état 1
+
+    $défaut  réduction par utilisation de la règle 1 (axiom)
+
+    axiom  aller à l'état 2
+    main   aller à l'état 3
+
+
+État 1
+
+    3 main: TYPE . MAIN '(' ')' '{' block
+
+    MAIN  décalage et aller à l'état 4
+
+
+État 2
+
+    0 $accept: axiom . $end
+
+    $end  décalage et aller à l'état 5
+
+
+État 3
+
+    2 axiom: main .
+
+    $défaut  réduction par utilisation de la règle 2 (axiom)
+
+
+État 4
+
+    3 main: TYPE MAIN . '(' ')' '{' block
+
+    '('  décalage et aller à l'état 6
+
+
+État 5
+
+    0 $accept: axiom $end .
+
+    $défaut  accepter
+
+
+État 6
+
+    3 main: TYPE MAIN '(' . ')' '{' block
+
+    ')'  décalage et aller à l'état 7
+
+
+État 7
+
+    3 main: TYPE MAIN '(' ')' . '{' block
+
+    '{'  décalage et aller à l'état 8
+
+
+État 8
+
+    3 main: TYPE MAIN '(' ')' '{' . block
+
+    INT    décalage et aller à l'état 9
+    TYPE   décalage et aller à l'état 10
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 12
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+    '}'    décalage et aller à l'état 15
+    ';'    décalage et aller à l'état 16
+
+    block  aller à l'état 17
+    stmnt  aller à l'état 18
+    E      aller à l'état 19
+
+
+État 9
+
+   18 E: INT .
+
+    $défaut  réduction par utilisation de la règle 18 (E)
+
+
+État 10
+
+    7 stmnt: TYPE . ID '=' E ';'
+
+    ID  décalage et aller à l'état 20
+
+
+État 11
+
+   19 E: FLOAT .
+
+    $défaut  réduction par utilisation de la règle 19 (E)
+
+
+État 12
+
+    8 stmnt: ID . '=' E ';'
+   20 E: ID .
+
+    '='  décalage et aller à l'état 21
+
+    $défaut  réduction par utilisation de la règle 20 (E)
+
+
+État 13
+
+   14 E: '-' . E
+
+    INT    décalage et aller à l'état 9
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 22
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+
+    E  aller à l'état 23
+
+
+État 14
+
+   17 E: '(' . E ')'
+
+    INT    décalage et aller à l'état 9
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 22
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+
+    E  aller à l'état 24
+
+
+État 15
+
+    5 block: '}' .
+
+    $défaut  réduction par utilisation de la règle 5 (block)
+
+
+État 16
+
+    6 stmnt: ';' .
+
+    $défaut  réduction par utilisation de la règle 6 (stmnt)
+
+
+État 17
+
+    3 main: TYPE MAIN '(' ')' '{' block .
+
+    $défaut  réduction par utilisation de la règle 3 (main)
+
+
+État 18
+
+    4 block: stmnt . block
+
+    INT    décalage et aller à l'état 9
+    TYPE   décalage et aller à l'état 10
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 12
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+    '}'    décalage et aller à l'état 15
+    ';'    décalage et aller à l'état 16
+
+    block  aller à l'état 25
+    stmnt  aller à l'état 18
+    E      aller à l'état 19
+
+
+État 19
+
+    9 stmnt: E . ';'
+   10 E: E . '+' E
+   11  | E . '-' E
+   12  | E . '*' E
+   13  | E . '/' E
+   15  | E . INCR
+   16  | E . DECR
+
+    '+'   décalage et aller à l'état 26
+    '-'   décalage et aller à l'état 27
+    '*'   décalage et aller à l'état 28
+    '/'   décalage et aller à l'état 29
+    INCR  décalage et aller à l'état 30
+    DECR  décalage et aller à l'état 31
+    ';'   décalage et aller à l'état 32
+
+
+État 20
+
+    7 stmnt: TYPE ID . '=' E ';'
+
+    '='  décalage et aller à l'état 33
+
+
+État 21
+
+    8 stmnt: ID '=' . E ';'
+
+    INT    décalage et aller à l'état 9
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 22
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+
+    E  aller à l'état 34
+
+
+État 22
+
+   20 E: ID .
+
+    $défaut  réduction par utilisation de la règle 20 (E)
+
+
+État 23
+
+   10 E: E . '+' E
+   11  | E . '-' E
+   12  | E . '*' E
+   13  | E . '/' E
+   14  | '-' E .
+   15  | E . INCR
+   16  | E . DECR
+
+    INCR  décalage et aller à l'état 30
+    DECR  décalage et aller à l'état 31
+
+    $défaut  réduction par utilisation de la règle 14 (E)
+
+
+État 24
+
+   10 E: E . '+' E
+   11  | E . '-' E
+   12  | E . '*' E
+   13  | E . '/' E
+   15  | E . INCR
+   16  | E . DECR
+   17  | '(' E . ')'
+
+    '+'   décalage et aller à l'état 26
+    '-'   décalage et aller à l'état 27
+    '*'   décalage et aller à l'état 28
+    '/'   décalage et aller à l'état 29
+    ')'   décalage et aller à l'état 35
+    INCR  décalage et aller à l'état 30
+    DECR  décalage et aller à l'état 31
+
+
+État 25
+
+    4 block: stmnt block .
+
+    $défaut  réduction par utilisation de la règle 4 (block)
+
+
+État 26
+
+   10 E: E '+' . E
+
+    INT    décalage et aller à l'état 9
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 22
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+
+    E  aller à l'état 36
+
+
+État 27
+
+   11 E: E '-' . E
+
+    INT    décalage et aller à l'état 9
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 22
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+
+    E  aller à l'état 37
+
+
+État 28
+
+   12 E: E '*' . E
+
+    INT    décalage et aller à l'état 9
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 22
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+
+    E  aller à l'état 38
+
+
+État 29
+
+   13 E: E '/' . E
+
+    INT    décalage et aller à l'état 9
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 22
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+
+    E  aller à l'état 39
+
+
+État 30
+
+   15 E: E INCR .
+
+    $défaut  réduction par utilisation de la règle 15 (E)
+
+
+État 31
+
+   16 E: E DECR .
+
+    $défaut  réduction par utilisation de la règle 16 (E)
+
+
+État 32
+
+    9 stmnt: E ';' .
+
+    $défaut  réduction par utilisation de la règle 9 (stmnt)
+
+
+État 33
+
+    7 stmnt: TYPE ID '=' . E ';'
+
+    INT    décalage et aller à l'état 9
+    FLOAT  décalage et aller à l'état 11
+    ID     décalage et aller à l'état 22
+    '-'    décalage et aller à l'état 13
+    '('    décalage et aller à l'état 14
+
+    E  aller à l'état 40
+
+
+État 34
+
+    8 stmnt: ID '=' E . ';'
+   10 E: E . '+' E
+   11  | E . '-' E
+   12  | E . '*' E
+   13  | E . '/' E
+   15  | E . INCR
+   16  | E . DECR
+
+    '+'   décalage et aller à l'état 26
+    '-'   décalage et aller à l'état 27
+    '*'   décalage et aller à l'état 28
+    '/'   décalage et aller à l'état 29
+    INCR  décalage et aller à l'état 30
+    DECR  décalage et aller à l'état 31
+    ';'   décalage et aller à l'état 41
+
+
+État 35
+
+   17 E: '(' E ')' .
+
+    $défaut  réduction par utilisation de la règle 17 (E)
+
+
+État 36
+
+   10 E: E . '+' E
+   10  | E '+' E .
+   11  | E . '-' E
+   12  | E . '*' E
+   13  | E . '/' E
+   15  | E . INCR
+   16  | E . DECR
+
+    '*'   décalage et aller à l'état 28
+    '/'   décalage et aller à l'état 29
+    INCR  décalage et aller à l'état 30
+    DECR  décalage et aller à l'état 31
+
+    $défaut  réduction par utilisation de la règle 10 (E)
+
+
+État 37
+
+   10 E: E . '+' E
+   11  | E . '-' E
+   11  | E '-' E .
+   12  | E . '*' E
+   13  | E . '/' E
+   15  | E . INCR
+   16  | E . DECR
+
+    '*'   décalage et aller à l'état 28
+    '/'   décalage et aller à l'état 29
+    INCR  décalage et aller à l'état 30
+    DECR  décalage et aller à l'état 31
+
+    $défaut  réduction par utilisation de la règle 11 (E)
+
+
+État 38
+
+   10 E: E . '+' E
+   11  | E . '-' E
+   12  | E . '*' E
+   12  | E '*' E .
+   13  | E . '/' E
+   15  | E . INCR
+   16  | E . DECR
+
+    INCR  décalage et aller à l'état 30
+    DECR  décalage et aller à l'état 31
+
+    $défaut  réduction par utilisation de la règle 12 (E)
+
+
+État 39
+
+   10 E: E . '+' E
+   11  | E . '-' E
+   12  | E . '*' E
+   13  | E . '/' E
+   13  | E '/' E .
+   15  | E . INCR
+   16  | E . DECR
+
+    INCR  décalage et aller à l'état 30
+    DECR  décalage et aller à l'état 31
+
+    $défaut  réduction par utilisation de la règle 13 (E)
+
+
+État 40
+
+    7 stmnt: TYPE ID '=' E . ';'
+   10 E: E . '+' E
+   11  | E . '-' E
+   12  | E . '*' E
+   13  | E . '/' E
+   15  | E . INCR
+   16  | E . DECR
+
+    '+'   décalage et aller à l'état 26
+    '-'   décalage et aller à l'état 27
+    '*'   décalage et aller à l'état 28
+    '/'   décalage et aller à l'état 29
+    INCR  décalage et aller à l'état 30
+    DECR  décalage et aller à l'état 31
+    ';'   décalage et aller à l'état 42
+
+
+État 41
+
+    8 stmnt: ID '=' E ';' .
+
+    $défaut  réduction par utilisation de la règle 8 (stmnt)
+
+
+État 42
+
+    7 stmnt: TYPE ID '=' E ';' .
+
+    $défaut  réduction par utilisation de la règle 7 (stmnt)
