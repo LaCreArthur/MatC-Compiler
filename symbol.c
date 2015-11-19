@@ -69,3 +69,13 @@ void symbol_free (struct symbol* list){
       free(tmp);
    }
 }
+
+void symbol_toMips (struct symbol* list, FILE* out){
+  fprintf(out,"\t.data\n"); // init data segment
+	while (list != NULL) {
+		fprintf(out,"%s:\t.word %d\n", list->id, (int)list->value); // declare statics vars
+    list = list->next;
+	}
+  fprintf(out,"end_msg:\t.ascii \"\\nexit status:\" \n"); 
+  fprintf(out,"\n#end of data seg\n");
+}

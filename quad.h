@@ -10,3 +10,4 @@ struct quad* quad_gen(char op,struct symbol* arg1,struct symbol* arg2,struct sym
 void quad_add (struct quad** list, struct quad* new);
 void quad_print (struct quad* list);
 void quad_free (struct quad* list);
+void quad_toMips (struct quad* list, FILE* out);

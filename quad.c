@@ -53,3 +53,25 @@ void quad_free (struct quad* list){
 			free(tmp);
 	 }
 }
+
+void quad_toMips (struct quad* list, FILE* out){
+	fprintf(out, "\t.text\nmain:\n"); // init code segment
+	while (list != NULL) {
+		if(list->arg1 != NULL && list->res != NULL) {
+			fprintf(out,"#load\n\tlw $t0, %s\n", list->res->id); // load res into $t0
+			fprintf(out,"\tlw $t1, %s\n", list->arg1->id); // load arg1 into $t1
+			if (list->arg2 != NULL) fprintf(out,"\tlw $t2, %s\n", list->arg2->id); // load arg2 into $t2
+			switch (list->op) {
+				case '+': {fprintf(out, "\t#addition      \n\tadd $t0, $t1, $t2\n");  break;}
+				case '-': {fprintf(out, "\t#substraction  \n\tsub $t0, $t1, $t2\n");  break;}
+				case '*': {fprintf(out, "\t#multiplication\n\tmult $t0, $t1, $t2\n"); break;}
+				case '/': {fprintf(out, "\t#division      \n\tdiv $t0, $t1, $t2\n");  break;}
+				case '=': {fprintf(out, "\t#affectation   \n\tmove $t1, $t0\n");        break;}
+				default: break;
+			}
+			fprintf(out, "\tsw $t0, %s\n",list->res->id); // store the new res into the res data seg
+			fprintf(out, "\t#print\n\tli $v0, 1\n\tmove $a0, $t0\n\tsyscall\n"); // debug
+		}
+		list = list->next;
+	}
+}

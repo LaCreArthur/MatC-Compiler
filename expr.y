@@ -99,7 +99,7 @@ stmnt:
 			                              temp_add(&incrOrDecr_tmp, 1);
                                     // add a quad E = E +/- 1
                                     quad_add(&$1.code, quad_gen( op,$1.result,incrOrDecr_tmp,$1.result));
-                                    $1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
+                                    //$1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
                                     quad_add(&code, $1.code);
 			                            }
   | E ';'                         { //printf("  Match :~) !\n");
@@ -237,16 +237,22 @@ int main(int argc, char *argv[]){
 
   extern int yylex();
   // extern int yyparse();
-  extern FILE *yyin;
+  extern FILE* yyin;
 
   printf("Welcome\n");
 
   if (argc > 1 && strcmp(argv[1], "-debug") != 0){
-    yyin = fopen(argv[1],"r");
+    if ((yyin = fopen(argv[1],"r")) == NULL){
+      perror("fopen code :");
+    };
     /* Read out the link to our file descriptor. */
     filename = strdup(argv[1]);
 
     if(yyin == NULL) perror("yacc_fopen ");
+  }
+  FILE* out;
+  if ((out = fopen("test.asm","w")) == NULL) {
+    perror("fopen test.asm :");
   }
   yyparse();
 
@@ -254,6 +260,12 @@ int main(int argc, char *argv[]){
   symbol_print(tds);
   printf("\ncode :\n");
   quad_print(code);
+
+  symbol_toMips(tds,out);
+  quad_toMips(code,out);
+  fprintf(out,"exit:\n\tli $v0 4\n\tla $a0, end_msg\n\tsyscall"); // print end_msg
+  fprintf(out,"\n\tli $a0 1\n\tli $v0 1\n\tsyscall\n\tj $ra"); // end of asm code
+
   quad_free(code);
   symbol_free(tds);
 
