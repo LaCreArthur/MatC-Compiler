@@ -73,9 +73,11 @@ void symbol_free (struct symbol* list){
 void symbol_toMips (struct symbol* list, FILE* out){
   fprintf(out,"\t.data\n"); // init data segment
 	while (list != NULL) {
-		fprintf(out,"%s:\t.word %d\n", list->id, (int)list->value); // declare statics vars
+		if (list->isFloat) fprintf(out,"%s:\t.float %f\n", list->id, list->value); // declare statics float vars
+    else fprintf(out,"%s:\t.word %d\n", list->id, (int)list->value); // int vars, cast avoid warning
     list = list->next;
 	}
-  fprintf(out,"end_msg:\t.ascii \"\\nexit status:\" \n"); 
+  fprintf(out,"end_msg:\t.ascii \"\\nexit status:\" \n");
+  fprintf(out,"newline:\t.ascii \"\\n\" \n");
   fprintf(out,"\n#end of data seg\n");
 }
