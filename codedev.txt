@@ -1,8 +1,7 @@
 int main() {
 	/*bonsoir*/
-	float ia = 1.5 + 1.0 ;
-	int ib = 1;
-	ib++;
+	float ia = 1.5 + 1 ;
+	int ib = ia;
 	print(ia);
 	printf("bonsoir");
 	printm(ib);

@@ -15,4 +15,5 @@ struct symbol* symbol_add(struct symbol* symb, char* id);
 struct symbol* symbol_find(struct symbol* tds, char* id);
 void symbol_print (struct symbol* list);
 void symbol_free (struct symbol* list);
-void symbol_toMips (struct symbol* list, FILE* out);
+void tds_toMips (struct symbol* list, FILE* out);
+void symbol_toMips (struct symbol* s, FILE* out);

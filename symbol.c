@@ -70,7 +70,7 @@ void symbol_free (struct symbol* list){
    }
 }
 
-void symbol_toMips (struct symbol* list, FILE* out){
+void tds_toMips (struct symbol* list, FILE* out){
   fprintf(out,"\t.data\n"); // init data segment
 	while (list != NULL) {
 		if (list->isFloat) fprintf(out,"%s:\t.float %f\n", list->id, list->value); // declare statics float vars

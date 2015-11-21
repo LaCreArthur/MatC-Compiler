@@ -17,12 +17,11 @@
   float op_calc(char op, struct symbol* arg1, struct symbol* arg2);
   //int yydebug=1;
 
-  struct symbol* tds;
-  struct quad* code;
-  struct symbol* tmp_symb;
-  struct quad* tmp_quad;
-  extern int line;
-  char* filename;
+  struct symbol* tds; // the table of symbols
+  struct quad* code; // the intermediar code
+  extern int line; // the line which is parse, for error debugging
+  char* filename; // the exec prg name
+  FILE* out; // the output file stream
 %}
 
 %union {
@@ -73,17 +72,24 @@ stmnt:
   | TYPE ID '=' E ';'             { //printf(" Type : %d !\n", $1);
                                     quad_add(&code, $4.code); // store the E code
                                     struct symbol* new_id = symbol_add(tds, $2); // add the id in the tds
-                                    new_id->value = $4.result->value; // copie the E value into the id value
-                                    new_id->isFloat = ($1[0] == 'f' ? 1 : 0); // 'f' mean TYPE = float
+                                    if ($1[0] == 'f'){ // 'f' mean TYPE = float
+                                      new_id->isFloat = 1;
+                                      new_id->value = $4.result->value; // copie the E value into the id value
+                                      printf(" (%s = %.2f)",$2 ,$4.result->value); // verification
+                                    }
+                                    else {
+                                      new_id->isFloat = 0;
+                                      new_id->value = (int)$4.result->value; // cast to int before mips generation
+                                      printf(" (%s = %d)",$2 ,(int)$4.result->value); // verification
+                                    }
                                     quad_add(&code, quad_gen('=', $4.result,NULL, new_id)); // store this stmnt code
-                                    printf(" (%s = %.2f)",$2 ,$4.result->value); // verification
                                   }
   | ID '=' E ';'                  {
                                     struct symbol* id;
                                     printf(" (look for %s ... ", $1);
                                     if ((id = symbol_find(tds,$1)) != NULL) {
                                       printf("found !)");
-                                      id->value = $3.result->value; // copie the E value into the id value
+                                      id->isFloat?(id->value = $3.result->value):(id->value = (int)$3.result->value); // copie the E value into the id value
                                       quad_add(&code, quad_gen('=', $3.result,NULL, id)); // store this stmnt code
                                       printf(" (%s = %.2f)",$1 ,$3.result->value); // verification
                                     }
@@ -107,8 +113,15 @@ stmnt:
 				                            quad_add(&code, $1.code);
 				                          }
   | PRINT '(' ID ')' ';'          {
-                                    printf(" PRINT match ! \n");
-                                    // do a specifique quad or directly a mips code ?
+                                    struct symbol* id;
+                                    if ((id = symbol_find(tds,$3)) != NULL) {
+                                      printf(" found !");
+                                      quad_add(&code,quad_gen('p',NULL,NULL,id));
+                                    }
+                                    else {
+                                      fprintf(stderr,"%s:%d: error: '%s' undeclared (first use in this function)",filename, line, $3);
+                                      exit(EXIT_FAILURE);
+                                    }
                                   }
   | PRINTF '(' STR ')' ';'        {
                                     printf(" PRINTF match ! \n");
@@ -250,18 +263,17 @@ int main(int argc, char *argv[]){
 
     if(yyin == NULL) perror("yacc_fopen ");
   }
-  FILE* out;
+
   if ((out = fopen("test.asm","w")) == NULL) {
     perror("fopen test.asm :");
   }
   yyparse();
-
-  printf("\ntable :\n");
+  printf("\ntable : %s .\n",hey);
   symbol_print(tds);
   printf("\ncode :\n");
   quad_print(code);
 
-  symbol_toMips(tds,out);
+  tds_toMips(tds,out);
   quad_toMips(code,out);
   fprintf(out,"exit:\n\tli $v0 4\n\tla $a0, end_msg\n\tsyscall"); // print end_msg
   fprintf(out,"\n\tli $a0 1\n\tli $v0 1\n\tsyscall\n\tj $ra"); // end of asm code
