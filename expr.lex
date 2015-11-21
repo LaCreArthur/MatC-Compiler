@@ -14,16 +14,16 @@ float					{int}("."{int})?{exp}?
 char		    	[a-zA-Z]
 id			    	{char}({char}|{int})*
 op						[+*/()=-]
-noaplha				[\'\"\{\};]
 
-indice				("["{int}"]")+
-types					matrix|int|float
-keyword 	   	else|if|for|while|matrix|return
-
-comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
 newline				"\n"
 escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"|([ ])+
+types					matrix|int|float
+keyword 	   	else|if|for|while|matrix|return
+indice				("["{int}"]")
+
+comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
 string				\"([^"])*\"
+noaplha				[\'\"\{\};]
 
 %%
 
@@ -38,13 +38,13 @@ string				\"([^"])*\"
 {int}					{ yylval.int_value = atoi(yytext);return(INT);}
 {float}				{ yylval.float_value=atof(yytext);return(FLOAT);}
 {id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); yylval.str_value = strdup(yytext); return ID;}
-
+{indice}			{ printf("%s", yytext); yylval.int_value = atoi(yytext+1); return(INDICE);}
 "++"|"--"			{ printf("%s", yytext); yylval.str_value = yytext; return INCRorDECR;}
 {string}			{ if(DEBUG) printf(" str_");  printf("%s", yytext); yylval.str_value = strdup(yytext); return STR;}
 {op}					{ printf("%c", yytext[0]); return(yytext[0]);}
-{noaplha}			{ printf("%c", yytext[0]); return(yytext[0]);}
-
 {comment}     { printf("%s", yytext); }
+
+{noaplha}			{ printf("%c", yytext[0]); return(yytext[0]);}
 . 						{ printf("[lex] unknonw char : %s\n", yytext);}
 
 %%

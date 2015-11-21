@@ -5,9 +5,12 @@
 
 struct symbol* symbol_alloc() {
   struct symbol* new = malloc(sizeof(*new));
-  if(new == NULL) perror("symbol_alloc fail : ");
+  if(new == NULL) perror("symbol_alloc new fail : ");
+  new->tab = NULL;
   new->id = NULL;
   new->isConstant = false;
+  new->isFloat = false;
+  new->isMatrix = 0;
   new->value = 0;
   new->next = NULL;
   return new;
@@ -16,10 +19,7 @@ struct symbol* symbol_alloc() {
 struct symbol* symbol_newtemp(struct symbol** tds) {
     static int nb_symbol = 0;
     char temp_name[SYMBOL_MAX_NAME];
-    // char* tmp = malloc(SYMBOL_MAX_NAME * sizeof(char));
-    // if (tmp == NULL) perror("symbol_newtemp fail : ");
     snprintf(temp_name, SYMBOL_MAX_NAME, "temp_%d", nb_symbol);
-    // strcpy(tmp, temp_name);
     nb_symbol++;
     return symbol_add(*tds, temp_name);
 }
@@ -80,4 +80,10 @@ void tds_toMips (struct symbol* list, FILE* out){
   fprintf(out,"end_msg:\t.ascii \"\\nexit status:\" \n");
   fprintf(out,"newline:\t.ascii \"\\n\" \n");
   fprintf(out,"\n#end of data seg\n");
+}
+
+void symbol_tabAlloc (struct symbol* s, int size, int rows) {
+  s->tab = malloc(size*sizeof(float));
+  if(s->tab == NULL) perror("symbol_alloc tab fail : ");
+  s->isMatrix = rows;
 }

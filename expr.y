@@ -5,23 +5,12 @@
   #include "symbol.h"
   #include "quad.h"
   #include "matrix.h"
+  #include "expr.h"
   #include "testmatrix.h"
 
   int yylex();
   int yyerror();
 
-	void temp_add(struct symbol** result, float value);
-  void expr_add(char op, struct symbol** res_result, struct quad** res_code,
-                         struct symbol* arg1_result, struct quad* arg1_code,
-                         struct symbol* arg2_result, struct quad* arg2_code);
-  float op_calc(char op, struct symbol* arg1, struct symbol* arg2);
-  //int yydebug=1;
-
-  struct symbol* tds; // the table of symbols
-  struct quad* code; // the intermediar code
-  extern int line; // the line which is parse, for error debugging
-  char* filename; // the exec prg name
-  FILE* out; // the output file stream
 %}
 
 %union {
@@ -34,10 +23,11 @@
 	} codegen;
 }
 
-%token <int_value> INT
+%token <int_value> INT INDICE
 %token <float_value> FLOAT
 %token <str_value> ID TYPE INCRorDECR STR
 %type <codegen> E
+%type <codegen> affect
 %token MAIN PRINT PRINTF PRINTM
 %token '+' '-' '*' '/'
 %token '(' ')'
@@ -47,6 +37,7 @@
 %left '*' '/'
 %left NEG
 %right INCRorDECR
+%right INDICE
 
 %start axiom
 
@@ -69,29 +60,22 @@ block:
 stmnt:
   ';'
 
-  | TYPE ID '=' E ';'             { //printf(" Type : %d !\n", $1);
-                                    quad_add(&code, $4.code); // store the E code
-                                    struct symbol* new_id = symbol_add(tds, $2); // add the id in the tds
-                                    if ($1[0] == 'f'){ // 'f' mean TYPE = float
-                                      new_id->isFloat = 1;
-                                      new_id->value = $4.result->value; // copie the E value into the id value
-                                      printf(" (%s = %.2f)",$2 ,$4.result->value); // verification
-                                    }
-                                    else {
-                                      new_id->isFloat = 0;
-                                      new_id->value = (int)$4.result->value; // cast to int before mips generation
-                                      printf(" (%s = %d)",$2 ,(int)$4.result->value); // verification
-                                    }
-                                    quad_add(&code, quad_gen('=', $4.result,NULL, new_id)); // store this stmnt code
+  | TYPE ID affect               { //printf(" Type : %d !\n", $1);
+                                    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,0,0);
+                                    quad_add(&code, quad_gen('=', $3.result,NULL, new_id)); // store this stmnt code
                                   }
+  | TYPE ID INDICE affect         { printf("___array [%d] \n", $3);
+
+                                  }
+  | TYPE ID INDICE INDICE affect  { printf("___matrix spoted [%d][%d]\n", $3, $4);}
   | ID '=' E ';'                  {
                                     struct symbol* id;
-                                    printf(" (look for %s ... ", $1);
+                                    printf("___(look for %s ... ", $1);
                                     if ((id = symbol_find(tds,$1)) != NULL) {
                                       printf("found !)");
                                       id->isFloat?(id->value = $3.result->value):(id->value = (int)$3.result->value); // copie the E value into the id value
                                       quad_add(&code, quad_gen('=', $3.result,NULL, id)); // store this stmnt code
-                                      printf(" (%s = %.2f)",$1 ,$3.result->value); // verification
+                                      printf("___(%s = %.2f)",$1 ,$3.result->value); // verification
                                     }
                                     else {
                                       fprintf(stderr,"%s:%d: error: '%s' undeclared (first use in this function)",filename, line, $1);
@@ -115,7 +99,7 @@ stmnt:
   | PRINT '(' ID ')' ';'          {
                                     struct symbol* id;
                                     if ((id = symbol_find(tds,$3)) != NULL) {
-                                      printf(" found !");
+                                      printf("___found !");
                                       quad_add(&code,quad_gen('p',NULL,NULL,id));
                                     }
                                     else {
@@ -129,6 +113,11 @@ stmnt:
   | PRINTM '(' ID ')' ';'         {
                                     printf(" PRINTM match ! \n");
                                   }
+  ;
+
+affect:
+  ';'                             { $$.result = NULL; $$.code = NULL;} // not tested
+  | '=' E ';'                     { $$ = $2;}
   ;
 
 E:
@@ -170,10 +159,12 @@ E:
 			                              $$.code = NULL;
                                     $$.result->isFloat = 1;
 			                            }
+  | ID INDICE                     { printf("___array[%d] spoted\n", $2);}
+  | ID INDICE INDICE              { printf("___matrix[%d][%d] spoted\n", $2, $3);}
 	| ID                     			  { //printf("expr -> ID\n");
 																		//printf("ID = %s",$1);
                                     struct symbol* id;
-                                    printf(" (look for %s ... ", $1);
+                                    printf("____(look for %s ... ", $1);
                                     if ((id = symbol_find(tds,$1)) != NULL) {
                                       printf("found !)");
                                       $$.result = id;
@@ -181,6 +172,7 @@ E:
                                     else {
                                       printf("not found !)");
   																		$$.result = symbol_add(tds, $1);
+                                      $$.result->isConstant = true;
                                     }
   																	$$.code = NULL;
 																	}
@@ -192,48 +184,6 @@ int yyerror(char *s) {
   printf("%s\n",s);
   return 0;
 }
-
-
-void temp_add(struct symbol** result, float value){
-  if(tds == NULL) {
-    tds = symbol_newtemp(&tds);
-    *result = tds;
-  } else {
-    *result = symbol_newtemp(&tds);
-  }
-  (*result)->value = value;
-}
-
-void expr_add(char op, struct symbol** res_result, struct quad** res_code,
-                       struct symbol* arg1_result, struct quad* arg1_code,
-                       struct symbol* arg2_result, struct quad* arg2_code) {
-  *res_result = symbol_newtemp(&tds);
-  (*res_result)->value = op_calc(op, arg1_result, arg2_result);
-  (*res_result)->isFloat = arg1_result->isFloat;
-  *res_code = arg1_code;
-  quad_add(res_code,arg2_code);
-  quad_add(res_code, quad_gen( op,arg1_result,arg2_result,*res_result));
-}
-
-void stmt_add(char op, struct symbol** res_result, struct quad** res_code,
-                       struct symbol* arg1_result, struct quad* arg1_code) {
-  *res_result = symbol_add(tds,(*res_result)->id);
-  (*res_result)->value = arg1_result->value;
-  *res_code = arg1_code;
-  // quad_add(res_code,NULL);
-  quad_add(res_code, quad_gen( op,arg1_result,NULL,*res_result));
-}
-
-float op_calc(char op, struct symbol* arg1, struct symbol* arg2){
-  switch (op) {
-    case '+': return arg1->value + arg2->value;
-    case '*': return arg1->value * arg2->value;
-    case '-': return arg1->value - arg2->value;
-    case '/': return arg1->value / arg2->value;
-    default : return 0;
-  }
-}
-
 
 int main(int argc, char *argv[]){
   // if (argc < 2) {
@@ -268,7 +218,7 @@ int main(int argc, char *argv[]){
     perror("fopen test.asm :");
   }
   yyparse();
-  printf("\ntable : %s .\n",hey);
+  printf("\ntable :\n");
   symbol_print(tds);
   printf("\ncode :\n");
   quad_print(code);
