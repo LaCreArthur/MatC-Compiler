@@ -8,6 +8,7 @@
   #include "expr.h"
   #include "testmatrix.h"
 
+  int exit_status = 0;
   int yylex();
   int yyerror();
 
@@ -61,7 +62,7 @@ stmnt:
   ';'
 
   | TYPE ID affect               { //printf(" Type : %d !\n", $1);
-                                    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,0,0);
+                                    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,0,0,1);
                                     quad_add(&code, quad_gen('=', $3.result,NULL, new_id)); // store this stmnt code
                                   }
   | TYPE ID INDICE affect         { printf("___array [%d] \n", $3);
@@ -69,17 +70,10 @@ stmnt:
                                   }
   | TYPE ID INDICE INDICE affect  { printf("___matrix spoted [%d][%d]\n", $3, $4);}
   | ID '=' E ';'                  {
-                                    struct symbol* id;
-                                    printf("___(look for %s ... ", $1);
-                                    if ((id = symbol_find(tds,$1)) != NULL) {
-                                      printf("found !)");
-                                      id->isFloat?(id->value = $3.result->value):(id->value = (int)$3.result->value); // copie the E value into the id value
-                                      quad_add(&code, quad_gen('=', $3.result,NULL, id)); // store this stmnt code
-                                      printf("___(%s = %.2f)",$1 ,$3.result->value); // verification
-                                    }
-                                    else {
-                                      fprintf(stderr,"%s:%d: error: '%s' undeclared (first use in this function)",filename, line, $1);
-                                      exit(EXIT_FAILURE);
+                                    if (affectation("",$1,$3.result, $3.code,0,0,0) == NULL) { // arg char* type is not nedded
+                                          fprintf(stderr,"%s:%d: error: '%s' undeclared (first use in this function)",filename, line, $1);
+                                          exit_status = FAIL;
+                                          return 1;
                                     }
                                   }
   | E INCRorDECR	';'	      			{ //printf("expr -> expr++\n");
@@ -99,12 +93,13 @@ stmnt:
   | PRINT '(' ID ')' ';'          {
                                     struct symbol* id;
                                     if ((id = symbol_find(tds,$3)) != NULL) {
-                                      printf("___found !");
+                                      // printf("___found !");
                                       quad_add(&code,quad_gen('p',NULL,NULL,id));
                                     }
                                     else {
-                                      fprintf(stderr,"%s:%d: error: '%s' undeclared (first use in this function)",filename, line, $3);
-                                      exit(EXIT_FAILURE);
+                                      fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",filename, line, column, $3);
+                                      exit_status = FAIL;
+                                      return 1;
                                     }
                                   }
   | PRINTF '(' STR ')' ';'        {
@@ -159,20 +154,24 @@ E:
 			                              $$.code = NULL;
                                     $$.result->isFloat = 1;
 			                            }
-  | ID INDICE                     { printf("___array[%d] spoted\n", $2);}
-  | ID INDICE INDICE              { printf("___matrix[%d][%d] spoted\n", $2, $3);}
+  | ID INDICE                     {
+                                    //printf("___array[%d] spoted\n", $2);
+                                  }
+  | ID INDICE INDICE              {
+                                    //printf("___matrix[%d][%d] spoted\n", $2, $3);
+                                  }
 	| ID                     			  { //printf("expr -> ID\n");
 																		//printf("ID = %s",$1);
                                     struct symbol* id;
-                                    printf("____(look for %s ... ", $1);
+                                    //printf("____(look for %s ... ", $1);
                                     if ((id = symbol_find(tds,$1)) != NULL) {
-                                      printf("found !)");
+                                      //printf("found !)");
                                       $$.result = id;
                                     }
                                     else {
-                                      printf("not found !)");
-  																		$$.result = symbol_add(tds, $1);
-                                      $$.result->isConstant = true;
+                                      fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",filename, line, column, $1);
+                                      exit_status = FAIL;
+                                      return 1;
                                     }
   																	$$.code = NULL;
 																	}
@@ -218,6 +217,8 @@ int main(int argc, char *argv[]){
     perror("fopen test.asm :");
   }
   yyparse();
+  printf("\n");
+  exit_msg (exit_status);
   printf("\ntable :\n");
   symbol_print(tds);
   printf("\ncode :\n");
