@@ -4,14 +4,17 @@
 #include <stdbool.h>
 #define SYMBOL_MAX_NAME 64
 
+enum Type {
+  t_int, t_float, t_mat, t_bool, t_tab
+};
+
 struct symbol {
       char* id;
-      bool isConstant;
-      bool isFloat;
+      enum Type type;
       float value;
-      float* tab;
-      int isMatrix;
+      float* array;
       struct symbol* next;
+
 };
 
 struct symbol* symbol_alloc();

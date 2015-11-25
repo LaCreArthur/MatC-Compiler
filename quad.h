@@ -22,5 +22,6 @@ void quad_add (struct quad** list, struct quad* new);
 void quad_print (struct quad* list);
 void quad_free (struct quad* list);
 void quad_toMips (struct quad* list, FILE* out);
+char* Op_str(enum Op op);
 
 #endif

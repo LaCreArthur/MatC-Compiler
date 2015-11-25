@@ -6,11 +6,8 @@
 struct symbol* symbol_alloc() {
   struct symbol* new = malloc(sizeof(*new));
   if(new == NULL) perror("symbol_alloc new fail : ");
-  new->tab = NULL;
+  new->array = NULL;
   new->id = NULL;
-  new->isConstant = false;
-  new->isFloat = false;
-  new->isMatrix = 0;
   new->value = 0;
   new->next = NULL;
   return new;
@@ -50,10 +47,10 @@ struct symbol* symbol_find(struct symbol* tds, char* id){
   return NULL;
 }
 
-void symbol_print (struct symbol* list){
+void symbol_print (struct symbol* list){ // only print float and int for now
   if (list == NULL) printf("table null\n");
 	while (list != NULL) {
-		printf("%s\t%s \t= %.2f\n",(list->isFloat ? "float" : "int"), list->id, list->value);
+		printf("%s\t%s \t= %.2f\n",((list->type==t_float)? "float" : "int"), list->id, list->value);
     list = list->next;
 	}
 }
@@ -70,10 +67,10 @@ void symbol_free (struct symbol* list){
    }
 }
 
-void tds_toMips (struct symbol* list, FILE* out){
+void tds_toMips (struct symbol* list, FILE* out){ // only work for int and float by now
   fprintf(out,"\t.data\n"); // init data segment
 	while (list != NULL) {
-		if (list->isFloat) fprintf(out,"%s:\t.float %f\n", list->id, list->value); // declare statics float vars
+		if (list->type==t_float) fprintf(out,"%s:\t.float %f\n", list->id, list->value); // declare statics float vars
     else fprintf(out,"%s:\t.word %d\n", list->id, (int)list->value); // int vars, cast avoid warning
     list = list->next;
 	}
@@ -83,7 +80,7 @@ void tds_toMips (struct symbol* list, FILE* out){
 }
 
 void symbol_tabAlloc (struct symbol* s, int size, int rows) {
-  s->tab = malloc(size*sizeof(float));
-  if(s->tab == NULL) perror("symbol_alloc tab fail : ");
-  s->isMatrix = rows;
+  s->array = malloc(size*sizeof(float));
+  if(s->array == NULL) perror("symbol_alloc tab fail : ");
+  // s->isMatrix = rows;
 }

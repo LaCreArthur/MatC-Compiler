@@ -1,10 +1,6 @@
 int main() {
 	/*bonsoir*/
 	float ia = 1.5 + 1 ;
-	int bo = ta;
-	/* int ib[10][42] = ia[1];
-	print(ia);
-	printf("bonsoir");
-	printm(ib);
-	*/
+
+ 	int ib[3] = {1.0,2.2,3.5};
 }

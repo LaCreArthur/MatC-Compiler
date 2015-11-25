@@ -41,7 +41,7 @@ void quad_print (struct quad* list){
 		if(list->arg1 != NULL)
 			printf("%7s ", list->arg1->id);
 		if (list->arg2 != NULL)
-			printf("%c %7s",list->op, list->arg2->id); // when id = expr, arg2 is NULL
+			printf("%s%7s",Op_str(list->op), list->arg2->id); // when id = expr, arg2 is NULL
 		printf("\n");
 		list = list->next;
 	}
@@ -52,7 +52,7 @@ void quad_free (struct quad* list){
 	while (list != NULL)
 	 {
 			tmp = list;
-			printf("quad free %c\n", list->op);
+			printf("quad free %s\n", Op_str(list->op));
 			list = list->next;
 			free(tmp);
 	 }
@@ -62,7 +62,7 @@ void quad_toMips (struct quad* list, FILE* out){
 	fprintf(out, "\t.text\nmain:\n"); // init code segment
 	while (list != NULL) {
 		if(list->res != NULL) {
-			if (list->res->isFloat) {
+			if (list->res->type == t_float) {
 				fprintf(out,"#load\n\tl.s $f0, %s\n", list->res->id); // load res into $f0
 				if (list->arg1 != NULL) fprintf(out,"\tl.s $f1, %s\n", list->arg1->id); // load arg1 into $f1
 				if (list->arg2 != NULL) fprintf(out,"\tl.s $f2, %s\n", list->arg2->id); // load arg2 into $f2
@@ -97,4 +97,59 @@ void quad_toMips (struct quad* list, FILE* out){
 		}
 		list = list->next;
 	}
+}
+
+char* Op_str(enum Op op){
+	switch (op) {
+		case add: {
+								return "+";
+							}
+		case sub: {
+								return "-";
+							}
+		case mult: {
+								return "*";
+							}
+		case divi: {
+								return "/";
+							}
+		case neg: {
+								return "-";
+							}
+		case incr: {
+								return "++";
+							}
+		case decr: {
+								return "--";
+							}
+		case seq: {
+								return "==";
+							}
+		case sne: {
+								return "!=";
+							}
+		case sgt: {
+								return ">";
+							}
+		case slt: {
+								return "<";
+							}
+		case sge: {
+								return ">=";
+							}
+		case sle: {
+								return "<=";
+							}
+		case not: {
+								return "!";
+							}
+		case and: {
+								return "&&";
+							}
+		case or: {
+								return "||";
+							}
+		default: break;
+	}
+	return ""; // avoid warning
 }

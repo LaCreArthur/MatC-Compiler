@@ -1,19 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "expr.h"
 #include "symbol.h"
 #include "quad.h"
 #include "matrix.h"
 
-void temp_add(struct symbol** result, float value){
+void temp_add(struct symbol** result){
   if(tds == NULL) {
     tds = symbol_newtemp(&tds);
     *result = tds;
   } else {
     *result = symbol_newtemp(&tds);
   }
-  (*result)->value = value;
 }
 
 void expr_add(int op, struct symbol** res_result, struct quad** res_code,
@@ -21,7 +21,7 @@ void expr_add(int op, struct symbol** res_result, struct quad** res_code,
                        struct symbol* arg2_result, struct quad* arg2_code) {
   *res_result = symbol_newtemp(&tds);
   (*res_result)->value = op_calc(op, arg1_result, arg2_result);
-  (*res_result)->isFloat = arg1_result->isFloat;
+  (*res_result)->type = arg1_result->type;
   *res_code = arg1_code;
   quad_add(res_code,arg2_code);
   quad_add(res_code, quad_gen( op,arg1_result,arg2_result,*res_result));
@@ -36,7 +36,7 @@ void stmt_add(int op, struct symbol** res_result, struct quad** res_code,
   quad_add(res_code, quad_gen( op,arg1_result,NULL,*res_result));
 }
 
-struct symbol* affectation(char* type, char* id, struct symbol* res, struct quad* q, int declare){
+struct symbol* affectation(int type, char* id, struct symbol* res, struct quad* q, int declare){
   quad_add(&code, q); // store the E code
   struct symbol* new_id;
   // printf("___(look for %s ... ", id);
@@ -47,7 +47,7 @@ struct symbol* affectation(char* type, char* id, struct symbol* res, struct quad
     }
     else {
       // printf("found !)");
-      new_id->isFloat?(new_id->value = res->value):(new_id->value = (int)res->value); // copie the E value into the id value
+      (new_id->type==t_float)?(new_id->value = res->value):(new_id->value = (int)res->value); // copie the E value into the id value
       quad_add(&code, quad_gen(eq, res,NULL, new_id)); // store this stmnt code
       printf("___(%s = %.2f)", id, res->value); // verification
     }
@@ -57,13 +57,13 @@ struct symbol* affectation(char* type, char* id, struct symbol* res, struct quad
       return NULL;
     }
     new_id = symbol_add(tds, id); // add the id in the tds
-    if (type[0] == 'f'){ // 'f' mean TYPE = float
-      new_id->isFloat = 1;
+    if (type == t_float){ // 'f' mean TYPE = float
+      new_id->type = t_float;
       new_id->value = res->value; // copie the E value into the id value
       printf("___(%s = %.2f)",id ,res->value); // verification
     }
     else {
-      new_id->isFloat = 0;
+      new_id->type = t_int;
       printf("___(%s = %d)",id ,(int)res->value); // verification
       new_id->value = (int)res->value; // cast to int before mips generation
     }
@@ -87,5 +87,19 @@ void exit_msg(int status){
     fprintf(stderr,"%*c %s\n",column+5,' ',"^");
     exit(EXIT_FAILURE);
   }
-  exit(0);
+
+}
+
+void arr_print( float* arr) {
+  for(unsigned int i=0; i <= (sizeof(arr)/sizeof(float)) ; i++){
+    printf("%.2f, ",arr[i]);
+  }
+}
+
+float* arr_cpy_tmp(float* tmp, int size){
+  float* res = malloc(size * sizeof(float));
+  for(int i=0; i<size ; i++){
+    res[i] = tmp[i];
+  }
+  return res;
 }

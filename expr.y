@@ -2,6 +2,7 @@
   #include <stdio.h>
   #include <stdlib.h>
 	#include <string.h>
+	#include <math.h>
   #include "symbol.h"
   #include "quad.h"
   #include "matrix.h"
@@ -11,24 +12,29 @@
   int exit_status = SUCCESS;
   int yylex();
   int yyerror();
+  float tmp_arr_vals[100] = { [0 ... 99] = INFINITY};
+  int tmp_arr_index = 0;
+
 
 %}
 
 %union {
   int int_value;
+  int* indice;
   float float_value;
   char* str_value;
 	struct {
 		struct symbol* result;
 		struct quad* code;
 	} codegen;
+
 }
 
-%token <int_value> INT INDICE
+%token <int_value> INT INDEX TYPE
 %token <float_value> FLOAT
-%token <str_value> ID TYPE INCRorDECR STR
-%type <codegen> E
-%type <codegen> affect
+%token <str_value> ID INCRorDECR STR
+%type <codegen> E affect
+%type <int_value> indice
 %token MAIN PRINT PRINTF PRINTM
 %token <relop> RELOP
 %token '+' '-' '*' '/'
@@ -39,7 +45,7 @@
 %left '*' '/'
 %left NEG
 %right INCRorDECR
-%right INDICE
+%right INDEX
 
 %start axiom
 
@@ -66,12 +72,16 @@ stmnt:
                                     struct symbol* new_id = affectation($1,$2,$3.result, $3.code,1);
                                     quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
                                   }
-  | TYPE ID INDICE affect         { printf("___array [%d] \n", $3);
+  | TYPE ID indice affect         {
+                                    //  printf("___array [%d] \n", $3);
+                                     float* test = arr_cpy_tmp(tmp_arr_vals, $3);
+                                    //  struct symbol* new_id = affectation($1,$2,$3.result, $3.code,1);
+                                    //  quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
 
                                   }
-  | TYPE ID INDICE INDICE affect  { printf("___matrix spoted [%d][%d]\n", $3, $4);}
+  // | TYPE ID INDICE INDICE affect  { printf("___matrix spoted [%d][%d]\n", $3, $4);}
   | ID affect                     {
-                                    if (affectation("",$1,$2.result, $2.code,0) == NULL) { // arg char* type is not nedded
+                                    if (affectation(0,$1,$2.result, $2.code,0) == NULL) { // arg char* type is not needed
                                           column-=strlen($1)+3;
                                           fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",filename, line, column, $1);
                                           exit_status = FAIL;
@@ -82,7 +92,8 @@ stmnt:
                                     int op = ($2[0] == '+' ? incr : decr); // to add or remove 1
                                     // a temp with value 1
 			                              struct symbol* incrOrDecr_tmp = (struct symbol*)calloc(1,sizeof(struct symbol));
-			                              temp_add(&incrOrDecr_tmp, 1);
+			                              temp_add(&incrOrDecr_tmp);
+                                    incrOrDecr_tmp->value = 1;
                                     // add a quad E = E +/- 1
                                     quad_add(&$1.code, quad_gen( op,$1.result,incrOrDecr_tmp,$1.result));
                                     //$1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
@@ -110,8 +121,28 @@ stmnt:
   ;
 
 affect:
-  ';'                             { $$.result = NULL; $$.code = NULL;} // not tested
+    ';'                           { $$.result = NULL; $$.code = NULL;} // not tested
   | '=' E ';'                     { $$ = $2;}
+  | '=' '{' values '}' ';'        {
+
+                                    temp_add(&$$.result);
+                                    $$.code = NULL;
+                                    $$.result->type = t_float;
+                                    $$.result->value = INFINITY;
+                                  }
+  ;
+
+values:
+  FLOAT ',' values                {
+                                    tmp_arr_vals[tmp_arr_index] = $1;
+                                    tmp_arr_index++;
+                                    printf("%.2f",$1);
+                                  }
+  | FLOAT                         {
+                                    tmp_arr_vals[tmp_arr_index] = $1;
+                                    tmp_arr_index++;
+                                    printf("%.2f",$1);
+                                  }
   ;
 
 E:
@@ -155,21 +186,20 @@ E:
   | '(' E ')'               			{$$ = $2;}
   | INT                     			{ //printf("expr -> INT\n");
 			                              printf("%d",$1);
-			                              temp_add(&$$.result, $1);
+			                              temp_add(&$$.result);
 			                              $$.code = NULL;
-                                    $$.result->isFloat = 0;
+                                    $$.result->type = t_float;
+                                    $$.result->value = $1;
 			                            }
   | FLOAT                     		{ //printf(expr -> INT\n");
 			                              printf("%.2f",$1);
-			                              temp_add(&$$.result, $1);
+			                              temp_add(&$$.result);
 			                              $$.code = NULL;
-                                    $$.result->isFloat = 1;
+                                    $$.result->type = t_float;
+                                    $$.result->value = $1;
 			                            }
-  | ID INDICE                     {
+  | ID indice                     {
                                     //printf("___array[%d] spoted\n", $2);
-                                  }
-  | ID INDICE INDICE              {
-                                    //printf("___matrix[%d][%d] spoted\n", $2, $3);
                                   }
 	| ID                     			  { //printf("expr -> ID\n");
 																		//printf("ID = %s",$1);
@@ -189,6 +219,14 @@ E:
 																	}
   ;
 
+indice:
+    INDEX             {
+                        printf("_index_");
+                      }
+  | INDEX indice      {
+                        // *$$ =
+                      }
+  ;
 
 %%
 int yyerror(char *s) {
