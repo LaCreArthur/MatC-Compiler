@@ -1,3 +1,6 @@
+#ifndef __SYMB__H__
+#define __SYMB__H__
+
 #include <stdbool.h>
 #define SYMBOL_MAX_NAME 64
 
@@ -21,3 +24,5 @@ void tds_toMips (struct symbol* list, FILE* out);
 void symbol_toMips (struct symbol* s, FILE* out);
 void symbol_tabAlloc (struct symbol* s, int size, int rows);
 void symbol_tabSets (struct symbol* s, int size, int rows, char* values);
+
+#endif

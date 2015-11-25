@@ -8,7 +8,7 @@
   #include "expr.h"
   #include "testmatrix.h"
 
-  int exit_status = 0;
+  int exit_status = SUCCESS;
   int yylex();
   int yyerror();
 
@@ -30,6 +30,7 @@
 %type <codegen> E
 %type <codegen> affect
 %token MAIN PRINT PRINTF PRINTM
+%token <relop> RELOP
 %token '+' '-' '*' '/'
 %token '(' ')'
 %token END
@@ -62,22 +63,23 @@ stmnt:
   ';'
 
   | TYPE ID affect               { //printf(" Type : %d !\n", $1);
-                                    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,0,0,1);
-                                    quad_add(&code, quad_gen('=', $3.result,NULL, new_id)); // store this stmnt code
+                                    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,1);
+                                    quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
                                   }
   | TYPE ID INDICE affect         { printf("___array [%d] \n", $3);
 
                                   }
   | TYPE ID INDICE INDICE affect  { printf("___matrix spoted [%d][%d]\n", $3, $4);}
-  | ID '=' E ';'                  {
-                                    if (affectation("",$1,$3.result, $3.code,0,0,0) == NULL) { // arg char* type is not nedded
-                                          fprintf(stderr,"%s:%d: error: '%s' undeclared (first use in this function)",filename, line, $1);
+  | ID affect                     {
+                                    if (affectation("",$1,$2.result, $2.code,0) == NULL) { // arg char* type is not nedded
+                                          column-=strlen($1)+3;
+                                          fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",filename, line, column, $1);
                                           exit_status = FAIL;
                                           return 1;
                                     }
                                   }
   | E INCRorDECR	';'	      			{ //printf("expr -> expr++\n");
-                                    char op = ($2[0] == '+' ? '+' : '-'); // to add or remove 1
+                                    int op = ($2[0] == '+' ? incr : decr); // to add or remove 1
                                     // a temp with value 1
 			                              struct symbol* incrOrDecr_tmp = (struct symbol*)calloc(1,sizeof(struct symbol));
 			                              temp_add(&incrOrDecr_tmp, 1);
@@ -86,17 +88,14 @@ stmnt:
                                     //$1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
                                     quad_add(&code, $1.code);
 			                            }
-  | E ';'                         { //printf("  Match :~) !\n");
-				                            //printf("// %s = %.2f",$1.result->id,$1.result->value);
-				                            quad_add(&code, $1.code);
-				                          }
   | PRINT '(' ID ')' ';'          {
                                     struct symbol* id;
                                     if ((id = symbol_find(tds,$3)) != NULL) {
                                       // printf("___found !");
-                                      quad_add(&code,quad_gen('p',NULL,NULL,id));
+                                      quad_add(&code,quad_gen(prnt,NULL,NULL,id));
                                     }
                                     else {
+                                      column-=strlen($3)+3;
                                       fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",filename, line, column, $3);
                                       exit_status = FAIL;
                                       return 1;
@@ -116,23 +115,35 @@ affect:
   ;
 
 E:
-    E '+' E                 			{ //printf("expr -> expr + expr\n");
-			                              expr_add('+', &$$.result, &$$.code,
+  //   E "or" E                      {
+  //
+  //                                 }
+  // | E "and" E                     {
+  //
+  //                                 }
+  // | E RELOP E                     {
+  //
+  //                                 }
+  // | "not" E                       {
+  //
+  //                                 }
+   E '+' E                 			  { //printf("expr -> expr + expr\n");
+			                              expr_add(add, &$$.result, &$$.code,
 			                                             $1.result, $1.code,
 			                                             $3.result, $3.code);
 			                            }
   | E '-' E                 			{ //printf("expr -> expr - expr\n");
-																		expr_add('-', &$$.result, &$$.code,
+																		expr_add(sub, &$$.result, &$$.code,
 																									 $1.result, $1.code,
 																									 $3.result, $3.code);
 																	}
   | E '*' E                 			{ //printf("expr -> expr * expr\n");
-			                              expr_add('*', &$$.result, &$$.code,
+			                              expr_add(mult, &$$.result, &$$.code,
 			                                            $1.result, $1.code,
 			                                            $3.result, $3.code);
 			                            }
   | E '/' E                 			{ //printf("expr -> expr / expr\n");
-			                              expr_add('/', &$$.result, &$$.code,
+			                              expr_add(divi, &$$.result, &$$.code,
 			                                            $1.result, $1.code,
 			                                            $3.result, $3.code);
 			                            }
@@ -148,7 +159,7 @@ E:
 			                              $$.code = NULL;
                                     $$.result->isFloat = 0;
 			                            }
-  | FLOAT                     		{ //printf("expr -> INT\n");
+  | FLOAT                     		{ //printf(expr -> INT\n");
 			                              printf("%.2f",$1);
 			                              temp_add(&$$.result, $1);
 			                              $$.code = NULL;
@@ -169,6 +180,7 @@ E:
                                       $$.result = id;
                                     }
                                     else {
+                                      column-=strlen($1)+3;
                                       fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",filename, line, column, $1);
                                       exit_status = FAIL;
                                       return 1;
@@ -200,8 +212,6 @@ int main(int argc, char *argv[]){
   extern int yylex();
   // extern int yyparse();
   extern FILE* yyin;
-
-  printf("Welcome\n");
 
   if (argc > 1 && strcmp(argv[1], "-debug") != 0){
     if ((yyin = fopen(argv[1],"r")) == NULL){

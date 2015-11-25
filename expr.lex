@@ -29,6 +29,7 @@ noaplha				[\'\"\{\};]
 %%
 
 {newline}			{ printf("%s", yytext); line++; column = 1;}
+"\t"					{ printf("%s", yytext); column += 4;}
 {escapesec}   { printf("%s", yytext); column_incr;}
 {types}		    { printf("%s", yytext); column_incr; yylval.str_value = yytext; return TYPE; }
 "main"				{	printf("main"); column_incr; return MAIN;}

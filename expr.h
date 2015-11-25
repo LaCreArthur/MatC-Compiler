@@ -1,23 +1,38 @@
 #ifndef __EXPR__H__
 #define __EXPR__H__
 
-//int yydebug=1;
+
+// exit status ---
 #define FAIL 1
 #define SUCCESS 2
+// ---
 struct symbol* tds; // the table of symbols
-struct quad* code; // the intermediar code
-extern int line; // the line which is parse, for error debugging
-char* filename; // the exec prg name
-FILE* out; // the output file stream
+struct quad* code;  // the intermediar code
+extern int line;    // the line which is parse, for error debugging
+extern int column;  // the column in the line, for error debugging
+char* filename;     // the exec prg name
+FILE* out; 					// the output file stream
 
-extern int column;
 
-float op_calc(char op, struct symbol* arg1, struct symbol* arg2);
+// perfome the calcule of arg1 op arg2
+float op_calc(int op, struct symbol* arg1, struct symbol* arg2);
+
+// add a temp expression
 void temp_add(struct symbol** result, float value);
-void expr_add(char op, struct symbol** res_result, struct quad** res_code,
+
+// add an expression in the tds
+void expr_add(int op, struct symbol** res_result, struct quad** res_code,
 											 struct symbol* arg1_result, struct quad* arg1_code,
 											 struct symbol* arg2_result, struct quad* arg2_code);
-struct symbol* affectation(char* type, char* id, struct symbol* res, struct quad* code, int size, int rows, int declare);
+
+// add a stmnt which is not an expr in the tds
+void stmt_add(int op, struct symbol** res_result, struct quad** res_code,
+                      struct symbol* arg1_result, struct quad* arg1_code);
+
+// affect a value to an id
+struct symbol* affectation(char* type, char* id, struct symbol* res, struct quad* code, int declare);
+
+// print an ending message
 void exit_msg(int status);
 
 #endif

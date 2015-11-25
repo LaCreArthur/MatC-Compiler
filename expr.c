@@ -16,7 +16,7 @@ void temp_add(struct symbol** result, float value){
   (*result)->value = value;
 }
 
-void expr_add(char op, struct symbol** res_result, struct quad** res_code,
+void expr_add(int op, struct symbol** res_result, struct quad** res_code,
                        struct symbol* arg1_result, struct quad* arg1_code,
                        struct symbol* arg2_result, struct quad* arg2_code) {
   *res_result = symbol_newtemp(&tds);
@@ -27,7 +27,7 @@ void expr_add(char op, struct symbol** res_result, struct quad** res_code,
   quad_add(res_code, quad_gen( op,arg1_result,arg2_result,*res_result));
 }
 
-void stmt_add(char op, struct symbol** res_result, struct quad** res_code,
+void stmt_add(int op, struct symbol** res_result, struct quad** res_code,
                        struct symbol* arg1_result, struct quad* arg1_code) {
   *res_result = symbol_add(tds,(*res_result)->id);
   (*res_result)->value = arg1_result->value;
@@ -36,7 +36,7 @@ void stmt_add(char op, struct symbol** res_result, struct quad** res_code,
   quad_add(res_code, quad_gen( op,arg1_result,NULL,*res_result));
 }
 
-struct symbol* affectation(char* type, char* id, struct symbol* res, struct quad* q, int size, int rows, int declare){
+struct symbol* affectation(char* type, char* id, struct symbol* res, struct quad* q, int declare){
   quad_add(&code, q); // store the E code
   struct symbol* new_id;
   // printf("___(look for %s ... ", id);
@@ -48,7 +48,7 @@ struct symbol* affectation(char* type, char* id, struct symbol* res, struct quad
     else {
       // printf("found !)");
       new_id->isFloat?(new_id->value = res->value):(new_id->value = (int)res->value); // copie the E value into the id value
-      quad_add(&code, quad_gen('=', res,NULL, new_id)); // store this stmnt code
+      quad_add(&code, quad_gen(eq, res,NULL, new_id)); // store this stmnt code
       printf("___(%s = %.2f)", id, res->value); // verification
     }
   }
@@ -64,27 +64,27 @@ struct symbol* affectation(char* type, char* id, struct symbol* res, struct quad
     }
     else {
       new_id->isFloat = 0;
-      new_id->value = (int)res->value; // cast to int before mips generation
       printf("___(%s = %d)",id ,(int)res->value); // verification
+      new_id->value = (int)res->value; // cast to int before mips generation
     }
   }
   return new_id;
 }
 
 
-float op_calc(char op, struct symbol* arg1, struct symbol* arg2){
+float op_calc(int op, struct symbol* arg1, struct symbol* arg2){
   switch (op) {
-    case '+': return arg1->value + arg2->value;
-    case '*': return arg1->value * arg2->value;
-    case '-': return arg1->value - arg2->value;
-    case '/': return arg1->value / arg2->value;
+    case add: return arg1->value + arg2->value;
+    case mult: return arg1->value * arg2->value;
+    case sub: return arg1->value - arg2->value;
+    case divi: return arg1->value / arg2->value;
     default : return 0;
   }
 }
 
 void exit_msg(int status){
   if (status == FAIL) {
-    fprintf(stderr,"%*c %s",column+1,' ',"^^^\n");
+    fprintf(stderr,"%*c %s\n",column+5,' ',"^");
     exit(EXIT_FAILURE);
   }
   exit(0);
