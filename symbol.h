@@ -5,7 +5,7 @@
 #define SYMBOL_MAX_NAME 64
 
 enum Type {
-  t_int, t_float, t_mat, t_bool, t_tab
+  t_int, t_float, t_mat, t_bool, t_arr
 };
 
 struct symbol {
@@ -27,5 +27,9 @@ void tds_toMips (struct symbol* list, FILE* out);
 void symbol_toMips (struct symbol* s, FILE* out);
 void symbol_tabAlloc (struct symbol* s, int size, int rows);
 void symbol_tabSets (struct symbol* s, int size, int rows, char* values);
+
+char* symbol_typeToStr(enum Type type);
+void symbol_printVal(struct symbol* s);
+void symbol_arrPrint( float* arr);
 
 #endif

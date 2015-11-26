@@ -50,7 +50,8 @@ struct symbol* symbol_find(struct symbol* tds, char* id){
 void symbol_print (struct symbol* list){ // only print float and int for now
   if (list == NULL) printf("table null\n");
 	while (list != NULL) {
-		printf("%s\t%s \t= %.2f\n",((list->type==t_float)? "float" : "int"), list->id, list->value);
+		printf("%s\t%s \t=", symbol_typeToStr(list->type), list->id);
+    symbol_printVal(list);
     list = list->next;
 	}
 }
@@ -79,8 +80,32 @@ void tds_toMips (struct symbol* list, FILE* out){ // only work for int and float
   fprintf(out,"\n#end of data seg\n");
 }
 
-void symbol_tabAlloc (struct symbol* s, int size, int rows) {
-  s->array = malloc(size*sizeof(float));
-  if(s->array == NULL) perror("symbol_alloc tab fail : ");
-  // s->isMatrix = rows;
+char* symbol_typeToStr (enum Type type){
+  switch (type) {
+    case t_int:   { return "int";    }
+    case t_float: { return "float";  }
+    case t_arr:   { return "float[]";}
+    case t_mat:   { return "matrix"; }
+    case t_bool:  { return "bool";   }
+    default: {break;}
+  }
+  return "";
+}
+
+void symbol_printVal(struct symbol* s){
+  switch (s->type) {
+    case t_int:   { printf("%d\n", (int)s->value);   break;}
+    case t_float: { printf("%.2f\n", s->value); break;}
+    case t_arr:   { symbol_arrPrint(s->array);        break;}
+    case t_mat:   { symbol_arrPrint(s->array);        break;}
+    case t_bool:  { printf("%d\n", (int)s->value);   break;}
+    default: {break;}
+  }
+}
+
+void symbol_arrPrint(float* arr) {
+  for(unsigned int i=0; i <= (sizeof(arr)/sizeof(float)) ; i++){
+    printf("%.2f, ",arr[i]);
+  }
+  printf("\n");
 }

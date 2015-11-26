@@ -41,7 +41,7 @@ void quad_print (struct quad* list){
 		if(list->arg1 != NULL)
 			printf("%7s ", list->arg1->id);
 		if (list->arg2 != NULL)
-			printf("%s%7s",Op_str(list->op), list->arg2->id); // when id = expr, arg2 is NULL
+			printf("%s%7s",quad_opToStr(list->op), list->arg2->id); // when id = expr, arg2 is NULL
 		printf("\n");
 		list = list->next;
 	}
@@ -52,7 +52,7 @@ void quad_free (struct quad* list){
 	while (list != NULL)
 	 {
 			tmp = list;
-			printf("quad free %s\n", Op_str(list->op));
+			printf("quad free %s\n", quad_opToStr(list->op));
 			list = list->next;
 			free(tmp);
 	 }
@@ -99,56 +99,24 @@ void quad_toMips (struct quad* list, FILE* out){
 	}
 }
 
-char* Op_str(enum Op op){
+char* quad_opToStr(enum Op op){
 	switch (op) {
-		case add: {
-								return "+";
-							}
-		case sub: {
-								return "-";
-							}
-		case mult: {
-								return "*";
-							}
-		case divi: {
-								return "/";
-							}
-		case neg: {
-								return "-";
-							}
-		case incr: {
-								return "++";
-							}
-		case decr: {
-								return "--";
-							}
-		case seq: {
-								return "==";
-							}
-		case sne: {
-								return "!=";
-							}
-		case sgt: {
-								return ">";
-							}
-		case slt: {
-								return "<";
-							}
-		case sge: {
-								return ">=";
-							}
-		case sle: {
-								return "<=";
-							}
-		case not: {
-								return "!";
-							}
-		case and: {
-								return "&&";
-							}
-		case or: {
-								return "||";
-							}
+		case add:  { return "+"; }
+		case sub:  { return "-"; }
+		case mult: { return "*"; }
+		case divi: { return "/"; }
+		case neg:  { return "-"; }
+		case incr: { return "++";}
+		case decr: { return "--";}
+		case seq:  { return "==";}
+		case sne:  { return "!=";}
+		case sgt:  { return ">"; }
+		case slt:  { return "<"; }
+		case sge:  { return ">=";}
+		case sle:  { return "<=";}
+		case not:  { return "!"; }
+		case and:  { return "&&";}
+		case or:   { return "||";}
 		default: break;
 	}
 	return ""; // avoid warning

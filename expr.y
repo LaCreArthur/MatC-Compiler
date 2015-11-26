@@ -12,7 +12,7 @@
   int exit_status = SUCCESS;
   int yylex();
   int yyerror();
-  float tmp_arr_vals[100] = { [0 ... 99] = INFINITY};
+  float tmp_arr[100] = { [0 ... 99] = INFINITY};
   int tmp_arr_index = 0;
 
 
@@ -20,7 +20,7 @@
 
 %union {
   int int_value;
-  int* indice;
+  float* values;
   float float_value;
   char* str_value;
 	struct {
@@ -30,11 +30,13 @@
 
 }
 
+%type <codegen> E affect
+%type <int_value> indice
+%type <values> values
+
 %token <int_value> INT INDEX TYPE
 %token <float_value> FLOAT
 %token <str_value> ID INCRorDECR STR
-%type <codegen> E affect
-%type <int_value> indice
 %token MAIN PRINT PRINTF PRINTM
 %token <relop> RELOP
 %token '+' '-' '*' '/'
@@ -44,6 +46,7 @@
 %left '+' '-'
 %left '*' '/'
 %left NEG
+
 %right INCRorDECR
 %right INDEX
 
@@ -73,11 +76,15 @@ stmnt:
                                     quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
                                   }
   | TYPE ID indice affect         {
-                                    //  printf("___array [%d] \n", $3);
-                                     float* test = arr_cpy_tmp(tmp_arr_vals, $3);
-                                    //  struct symbol* new_id = affectation($1,$2,$3.result, $3.code,1);
-                                    //  quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
+                                    printf("___array [%d] \n", $3);
+                                    if($1 == t_int || $1 == t_bool){
+                                      fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of type '%s'",filename, line, column, symbol_typeToStr($1));
+                                      exit_status = FAIL;
+                                    }
 
+                                    $4.result->array = arr_cpy_tmp(tmp_arr,$3);
+                                    struct symbol* new_id = affectation($1,$2,$4.result, $4.code,1);
+                                    quad_add(&code, quad_gen(eq, $4.result,NULL, new_id));
                                   }
   // | TYPE ID INDICE INDICE affect  { printf("___matrix spoted [%d][%d]\n", $3, $4);}
   | ID affect                     {
@@ -124,22 +131,24 @@ affect:
     ';'                           { $$.result = NULL; $$.code = NULL;} // not tested
   | '=' E ';'                     { $$ = $2;}
   | '=' '{' values '}' ';'        {
-
                                     temp_add(&$$.result);
                                     $$.code = NULL;
-                                    $$.result->type = t_float;
+                                    $$.result->type = t_arr;
                                     $$.result->value = INFINITY;
                                   }
   ;
 
-values:
-  FLOAT ',' values                {
-                                    tmp_arr_vals[tmp_arr_index] = $1;
+values: // tab is backward recorded
+  FLOAT                           {
+                                    if ($$ == NULL) {
+                                      printf("$$ is null");
+                                    }
+                                    tmp_arr[tmp_arr_index] = $1;
                                     tmp_arr_index++;
                                     printf("%.2f",$1);
                                   }
-  | FLOAT                         {
-                                    tmp_arr_vals[tmp_arr_index] = $1;
+  | FLOAT ',' values              {
+                                    tmp_arr[tmp_arr_index] = $1;
                                     tmp_arr_index++;
                                     printf("%.2f",$1);
                                   }
@@ -264,7 +273,10 @@ int main(int argc, char *argv[]){
   if ((out = fopen("test.asm","w")) == NULL) {
     perror("fopen test.asm :");
   }
+
+  /////////////////////////////
   yyparse();
+  /////////////////////////////
   printf("\n");
   exit_msg (exit_status);
   printf("\ntable :\n");

@@ -38,34 +38,46 @@ void stmt_add(int op, struct symbol** res_result, struct quad** res_code,
 
 struct symbol* affectation(int type, char* id, struct symbol* res, struct quad* q, int declare){
   quad_add(&code, q); // store the E code
-  struct symbol* new_id;
-  // printf("___(look for %s ... ", id);
-  if((new_id = symbol_find(tds, id)) != NULL){ // id already declared
-    if (declare) {
+  struct symbol* new_id; // declare the possible new id
+  if((new_id = symbol_find(tds, id)) != NULL){ // new id already existe
+    if (declare) { // try to redeclare
       fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage",filename, line, id);
       exit(EXIT_FAILURE);
     }
-    else {
-      // printf("found !)");
-      (new_id->type==t_float)?(new_id->value = res->value):(new_id->value = (int)res->value); // copie the E value into the id value
-      quad_add(&code, quad_gen(eq, res,NULL, new_id)); // store this stmnt code
-      printf("___(%s = %.2f)", id, res->value); // verification
+    else { // reaffectation
+      switch (new_id->type) { // copie the E value/array into the id value/array
+        case t_int:   { new_id->value = (int)res->value; break;}
+        case t_bool:  { new_id->value = (int)res->value; break;}
+        case t_float: { new_id->value = res->value;      break;}
+        case t_arr:   { new_id->array = res->array;      break;}
+        case t_mat:   { new_id->array = res->array;      break;}
+        default: {break;}
+      }
+      quad_add(&code, quad_gen(eq, res,NULL, new_id)); // store this affectation stmnt code
     }
   }
-  else {
-    if (!declare) { // new_id == NULL when it is not a declaration
-      return NULL;
+  else { // new id do not exist in tds
+    if (!declare) { // call a id that not exist
+      return NULL; // new_id == NULL when it is not a declaration
     }
     new_id = symbol_add(tds, id); // add the id in the tds
-    if (type == t_float){ // 'f' mean TYPE = float
-      new_id->type = t_float;
-      new_id->value = res->value; // copie the E value into the id value
-      printf("___(%s = %.2f)",id ,res->value); // verification
-    }
-    else {
+    if (type == t_int || type == t_bool) {
       new_id->type = t_int;
-      printf("___(%s = %d)",id ,(int)res->value); // verification
       new_id->value = (int)res->value; // cast to int before mips generation
+    }
+    else if (type == t_float) {
+      if (res->array != NULL) {
+        new_id->type = t_arr;
+        new_id->array = res->array;
+      }
+      else {
+        new_id->type = t_float;
+        new_id->value = res->value; // copie the E value into the id value
+      }
+    }
+    else if (type == t_mat) {
+      new_id->type = t_arr;
+      new_id->array = res->array; // copie the E value into the id value
     }
   }
   return new_id;
@@ -90,16 +102,12 @@ void exit_msg(int status){
 
 }
 
-void arr_print( float* arr) {
-  for(unsigned int i=0; i <= (sizeof(arr)/sizeof(float)) ; i++){
-    printf("%.2f, ",arr[i]);
-  }
-}
-
 float* arr_cpy_tmp(float* tmp, int size){
   float* res = malloc(size * sizeof(float));
+  int j= size-1;
   for(int i=0; i<size ; i++){
-    res[i] = tmp[i];
+    res[j] = tmp[i]; // tmp is backward recorded
+    j--;
   }
   return res;
 }
