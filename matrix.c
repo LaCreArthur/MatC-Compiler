@@ -10,6 +10,27 @@ matrix matrix_new(int rows, int cols){
 	return new;
 }
 
+int array_dimsToSize(int* dims, int D){
+	int size = 1;
+	for (int i=0; i<D; i++){
+		size*=dims[i];
+	}
+	return size;
+}
+
+array* array_new(int* dims, int D){
+	array* new = malloc(sizeof(*new));
+	int size = array_dimsToSize(dims, D);
+	new->size = size;
+	// new->values = malloc(size*sizeof(float));
+	// new->values = values; // must be malloc in amont
+	// printf("%s %f\n", "array values[0] : ", values[0]);
+	// printf("%s %f\n", "array new values[0] : ", new->values[0]);
+	new->D = D;
+	new->dims = dims;
+	return new;
+}
+
 void matrix_set(matrix *m, int row, int col, float nb){
 	m->mat[(m->cols)*row + col] = nb;
 }
@@ -23,6 +44,14 @@ void matrix_print(matrix m){
 		printf("\n");
 	}
 	printf("\n");
+}
+
+void array_print(float* arr, FILE* out) {
+  unsigned int i;
+  for(i=0; i < (sizeof(arr)/sizeof(float)) ; i++){
+		fprintf(out,"%.2f, ",arr[i]);
+  }
+  fprintf(out,"%.2f\n",arr[i]);
 }
 
 matrix matrix_transpos(matrix m) {
@@ -129,4 +158,15 @@ matrix matrix_extract(matrix a, int row, int* rows, int col, int* cols){
 void matrix_free(matrix* m){
 	free(m->mat);
 	free(m);
+}
+
+float* arr_cpy_tmp(float* tmp, int size){
+  float* res = malloc(size * sizeof(float));
+  int j= size-1;
+  for(int i=0; i<size ; i++){
+    res[j] = tmp[i]; // tmp is backward recorded
+		//printf("arrcpy %d val: %.2f\n",j,tmp[i]);
+    j--;
+  }
+  return res;
 }

@@ -14,12 +14,14 @@
   int yyerror();
   float tmp_arr[100] = { [0 ... 99] = INFINITY};
   int tmp_arr_index = 0;
-
+  int tmp_dims[10];
+  int tmp_dims_index = 0;
 
 %}
 
 %union {
   int int_value;
+  int* dims;
   float* values;
   float float_value;
   char* str_value;
@@ -31,7 +33,7 @@
 }
 
 %type <codegen> E affect
-%type <int_value> indice
+%type <dims> indice
 %type <values> values
 
 %token <int_value> INT INDEX TYPE
@@ -57,8 +59,8 @@
 axiom:
 
 	| main
-	;
 
+	;
 main:
   TYPE MAIN '(' ')' '{' block
   ;
@@ -76,21 +78,24 @@ stmnt:
                                     quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
                                   }
   | TYPE ID indice affect         {
-                                    printf("___array [%d] \n", $3);
-                                    if($1 == t_int || $1 == t_bool){
-                                      fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of type '%s'",filename, line, column, symbol_typeToStr($1));
+                                    if($1 == t_int || $1 == t_bool){ // wrong array type
+                                      fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of "
+                                                     "type '%s'",filename, line, column, symbol_typeToStr($1));
                                       exit_status = FAIL;
                                     }
-
-                                    $4.result->array = arr_cpy_tmp(tmp_arr,$3);
-                                    struct symbol* new_id = affectation($1,$2,$4.result, $4.code,1);
-                                    quad_add(&code, quad_gen(eq, $4.result,NULL, new_id));
+                                    else {
+                                      $4.result->arr = array_new(tmp_dims, tmp_dims_index);
+                                      $4.result->arr->values=arr_cpy_tmp(tmp_arr,$4.result->arr->size);
+                                      struct symbol* new_id = affectation($1,$2,$4.result, $4.code,1);
+                                      quad_add(&code, quad_gen(eq, $4.result,NULL, new_id));
+                                    }
                                   }
   // | TYPE ID INDICE INDICE affect  { printf("___matrix spoted [%d][%d]\n", $3, $4);}
   | ID affect                     {
                                     if (affectation(0,$1,$2.result, $2.code,0) == NULL) { // arg char* type is not needed
                                           column-=strlen($1)+3;
-                                          fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",filename, line, column, $1);
+                                          fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",
+                                                  filename, line, column, $1);
                                           exit_status = FAIL;
                                           return 1;
                                     }
@@ -114,7 +119,8 @@ stmnt:
                                     }
                                     else {
                                       column-=strlen($3)+3;
-                                      fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",filename, line, column, $3);
+                                      fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",
+                                              filename, line, column, $3);
                                       exit_status = FAIL;
                                       return 1;
                                     }
@@ -220,7 +226,8 @@ E:
                                     }
                                     else {
                                       column-=strlen($1)+3;
-                                      fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",filename, line, column, $1);
+                                      fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
+                                              filename, line, column, $1);
                                       exit_status = FAIL;
                                       return 1;
                                     }
@@ -228,12 +235,14 @@ E:
 																	}
   ;
 
-indice:
-    INDEX             {
-                        printf("_index_");
+indice: // store multiple indexs for multiple dimensions arrays
+    INDEX             { tmp_dims[tmp_dims_index] = $1;
+                        tmp_dims_index++;
                       }
   | INDEX indice      {
-                        // *$$ =
+                        tmp_dims[tmp_dims_index] = $1;
+                        tmp_dims_index++;
+                        printf("DIM++ %d\n", tmp_dims_index);
                       }
   ;
 
@@ -244,10 +253,10 @@ int yyerror(char *s) {
 }
 
 int main(int argc, char *argv[]){
-  // if (argc < 2) {
-  //    fprintf(stderr," usage : %s <file.cpp> [-debug]\n", argv[0]);
-  //    exit(EXIT_FAILURE);
-  //  }
+  if (argc < 2) {
+     fprintf(stderr," usage : %s <file.cpp> [-debug]\n", argv[0]);
+     exit(EXIT_FAILURE);
+   }
   // yydebug=1;
   extern int DEBUG;
   if ((argc == 2 && strcmp(argv[1], "-debug") == 0) ||
@@ -256,21 +265,23 @@ int main(int argc, char *argv[]){
     printf("DEBUG MODE\n..........\n");
   }
 
+  // read a file
   extern int yylex();
-  // extern int yyparse();
   extern FILE* yyin;
-
   if (argc > 1 && strcmp(argv[1], "-debug") != 0){
     if ((yyin = fopen(argv[1],"r")) == NULL){
       perror("fopen code :");
     };
-    /* Read out the link to our file descriptor. */
+    // save the name of the file
     filename = strdup(argv[1]);
-
     if(yyin == NULL) perror("yacc_fopen ");
   }
 
-  if ((out = fopen("test.asm","w")) == NULL) {
+  // the result asm file
+  char asm_file[50];
+  strncpy(asm_file,filename,sizeof(filename)-1);
+  strncat(asm_file,".asm",4);
+  if ((out = fopen(asm_file,"w")) == NULL) {
     perror("fopen test.asm :");
   }
 
@@ -279,6 +290,7 @@ int main(int argc, char *argv[]){
   /////////////////////////////
   printf("\n");
   exit_msg (exit_status);
+
   printf("\ntable :\n");
   symbol_print(tds);
   printf("\ncode :\n");

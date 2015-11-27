@@ -6,7 +6,7 @@
 struct symbol* symbol_alloc() {
   struct symbol* new = malloc(sizeof(*new));
   if(new == NULL) perror("symbol_alloc new fail : ");
-  new->array = NULL;
+  new->arr = NULL;
   new->id = NULL;
   new->value = 0;
   new->next = NULL;
@@ -55,8 +55,8 @@ void symbol_print (struct symbol* list){ // only print float and int for now
     list = list->next;
 	}
 }
-
 void symbol_free (struct symbol* list){
+
   struct symbol* tmp;
   while (list != NULL)
    {
@@ -71,8 +71,14 @@ void symbol_free (struct symbol* list){
 void tds_toMips (struct symbol* list, FILE* out){ // only work for int and float by now
   fprintf(out,"\t.data\n"); // init data segment
 	while (list != NULL) {
-		if (list->type==t_float) fprintf(out,"%s:\t.float %f\n", list->id, list->value); // declare statics float vars
-    else fprintf(out,"%s:\t.word %d\n", list->id, (int)list->value); // int vars, cast avoid warning
+    switch (list->type) {
+      case t_int:   { fprintf(out,"%s:\t.word %d\n",  list->id, (int)list->value); break;} // int vars, cast avoid warning
+      case t_float: { fprintf(out,"%s:\t.float %f\n", list->id, list->value);      break;} // declare statics float vars
+      case t_arr:   { fprintf(out,"%s:\t.float ",list->id); array_print(list->arr->values, out); break;}
+      case t_mat:   { break; }
+      case t_bool:  { break; }
+      default: {break;}
+    }
     list = list->next;
 	}
   fprintf(out,"end_msg:\t.ascii \"\\nexit status:\" \n");
@@ -95,17 +101,10 @@ char* symbol_typeToStr (enum Type type){
 void symbol_printVal(struct symbol* s){
   switch (s->type) {
     case t_int:   { printf("%d\n", (int)s->value);   break;}
-    case t_float: { printf("%.2f\n", s->value); break;}
-    case t_arr:   { symbol_arrPrint(s->array);        break;}
-    case t_mat:   { symbol_arrPrint(s->array);        break;}
+    case t_float: { printf("%.2f\n", s->value);      break;}
+    case t_arr:   { array_print(s->arr->values,stdout);break;}
+    case t_mat:   { array_print(s->arr->values,stdout);break;}
     case t_bool:  { printf("%d\n", (int)s->value);   break;}
     default: {break;}
   }
-}
-
-void symbol_arrPrint(float* arr) {
-  for(unsigned int i=0; i <= (sizeof(arr)/sizeof(float)) ; i++){
-    printf("%.2f, ",arr[i]);
-  }
-  printf("\n");
 }

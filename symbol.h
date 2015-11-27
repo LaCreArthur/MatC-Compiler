@@ -2,6 +2,7 @@
 #define __SYMB__H__
 
 #include <stdbool.h>
+#include "matrix.h"
 #define SYMBOL_MAX_NAME 64
 
 enum Type {
@@ -12,7 +13,7 @@ struct symbol {
       char* id;
       enum Type type;
       float value;
-      float* array;
+      array* arr;
       struct symbol* next;
 
 };
@@ -30,6 +31,5 @@ void symbol_tabSets (struct symbol* s, int size, int rows, char* values);
 
 char* symbol_typeToStr(enum Type type);
 void symbol_printVal(struct symbol* s);
-void symbol_arrPrint( float* arr);
 
 #endif

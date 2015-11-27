@@ -27,15 +27,6 @@ void expr_add(int op, struct symbol** res_result, struct quad** res_code,
   quad_add(res_code, quad_gen( op,arg1_result,arg2_result,*res_result));
 }
 
-void stmt_add(int op, struct symbol** res_result, struct quad** res_code,
-                       struct symbol* arg1_result, struct quad* arg1_code) {
-  *res_result = symbol_add(tds,(*res_result)->id);
-  (*res_result)->value = arg1_result->value;
-  *res_code = arg1_code;
-  // quad_add(res_code,NULL);
-  quad_add(res_code, quad_gen( op,arg1_result,NULL,*res_result));
-}
-
 struct symbol* affectation(int type, char* id, struct symbol* res, struct quad* q, int declare){
   quad_add(&code, q); // store the E code
   struct symbol* new_id; // declare the possible new id
@@ -49,8 +40,8 @@ struct symbol* affectation(int type, char* id, struct symbol* res, struct quad* 
         case t_int:   { new_id->value = (int)res->value; break;}
         case t_bool:  { new_id->value = (int)res->value; break;}
         case t_float: { new_id->value = res->value;      break;}
-        case t_arr:   { new_id->array = res->array;      break;}
-        case t_mat:   { new_id->array = res->array;      break;}
+        case t_arr:   { new_id->arr = res->arr; break;}
+        case t_mat:   { new_id->arr = res->arr; break;}
         default: {break;}
       }
       quad_add(&code, quad_gen(eq, res,NULL, new_id)); // store this affectation stmnt code
@@ -66,9 +57,9 @@ struct symbol* affectation(int type, char* id, struct symbol* res, struct quad* 
       new_id->value = (int)res->value; // cast to int before mips generation
     }
     else if (type == t_float) {
-      if (res->array != NULL) {
+      if (res->arr != NULL) {
         new_id->type = t_arr;
-        new_id->array = res->array;
+        new_id->arr = res->arr;
       }
       else {
         new_id->type = t_float;
@@ -77,7 +68,7 @@ struct symbol* affectation(int type, char* id, struct symbol* res, struct quad* 
     }
     else if (type == t_mat) {
       new_id->type = t_arr;
-      new_id->array = res->array; // copie the E value into the id value
+      new_id->arr = res->arr; // copie the E value into the id value
     }
   }
   return new_id;
@@ -100,14 +91,4 @@ void exit_msg(int status){
     exit(EXIT_FAILURE);
   }
 
-}
-
-float* arr_cpy_tmp(float* tmp, int size){
-  float* res = malloc(size * sizeof(float));
-  int j= size-1;
-  for(int i=0; i<size ; i++){
-    res[j] = tmp[i]; // tmp is backward recorded
-    j--;
-  }
-  return res;
 }
