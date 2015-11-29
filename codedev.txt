@@ -2,5 +2,6 @@ int main() {
 	/*bonsoir*/
 	float ia = 1.5 + 1 ;
 	int test = 5;
- 	float ib[3] = {1.0,2.2,3.5};
+ 	float ib[2][2] = {1.0,2.2,3.5,6.0};
+	ia = ib[2];
 }

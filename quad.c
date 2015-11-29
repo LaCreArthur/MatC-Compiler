@@ -101,6 +101,7 @@ void quad_toMips (struct quad* list, FILE* out){
 
 char* quad_opToStr(enum Op op){
 	switch (op) {
+		case eq:   { return "="; }
 		case add:  { return "+"; }
 		case sub:  { return "-"; }
 		case mult: { return "*"; }

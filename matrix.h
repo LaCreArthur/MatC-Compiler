@@ -30,5 +30,6 @@ float* arr_cpy_tmp(float* tmp, int size);
 int array_dimsToSize(int* dims, int D);
 array* array_new(int* dims, int D);
 void array_print(float* arr, FILE* out);
+void array_fillWithZero(array* arr, int count);
 
 #endif

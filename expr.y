@@ -16,6 +16,7 @@
   int tmp_arr_index = 0;
   int tmp_dims[10];
   int tmp_dims_index = 0;
+  int tested[2][2];
 
 %}
 
@@ -78,14 +79,20 @@ stmnt:
                                     quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
                                   }
   | TYPE ID indice affect         {
+                                    printf("tested %d", tested[3]);
                                     if($1 == t_int || $1 == t_bool){ // wrong array type
                                       fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of "
                                                      "type '%s'",filename, line, column, symbol_typeToStr($1));
                                       exit_status = FAIL;
                                     }
                                     else {
-                                      $4.result->arr = array_new(tmp_dims, tmp_dims_index);
-                                      $4.result->arr->values=arr_cpy_tmp(tmp_arr,$4.result->arr->size);
+                                      // array_print(tmp_arr, stdout);
+                                      if(tmp_arr_index > $4.result->arr->size){
+                                        // declare too many values inside the "{}"
+                                        fprintf(stderr,"%s:%d:%d: error: excess elements in array initializer"
+                                                      ,filename, line, column);
+                                        exit_status = FAIL;
+                                      }
                                       struct symbol* new_id = affectation($1,$2,$4.result, $4.code,1);
                                       quad_add(&code, quad_gen(eq, $4.result,NULL, new_id));
                                     }
@@ -141,6 +148,14 @@ affect:
                                     $$.code = NULL;
                                     $$.result->type = t_arr;
                                     $$.result->value = INFINITY;
+                                    $$.result->arr = array_new(tmp_dims, tmp_dims_index);
+                                    $$.result->arr->values=arr_cpy_tmp(tmp_arr,$$.result->arr->size);
+                                    // check if there are missing declarations
+                                    if (tmp_arr_index < $$.result->arr->size){
+                                      array_fillWithZero($$.result->arr, tmp_arr_index);
+                                    }
+                                    $$.result->arr->values[$$.result->arr->size] = INFINITY;
+                                    // $$.result->arr = arr_cpy_tmp(tmp_arr, 4);
                                   }
   ;
 
@@ -151,12 +166,12 @@ values: // tab is backward recorded
                                     }
                                     tmp_arr[tmp_arr_index] = $1;
                                     tmp_arr_index++;
-                                    printf("%.2f",$1);
+                                    // printf("%.2f,",$1);
                                   }
   | FLOAT ',' values              {
                                     tmp_arr[tmp_arr_index] = $1;
                                     tmp_arr_index++;
-                                    printf("%.2f",$1);
+                                    // printf("%.2f,",$1);
                                   }
   ;
 
@@ -200,14 +215,14 @@ E:
 			                            }
   | '(' E ')'               			{$$ = $2;}
   | INT                     			{ //printf("expr -> INT\n");
-			                              printf("%d",$1);
+			                              // printf("%d",$1);
 			                              temp_add(&$$.result);
 			                              $$.code = NULL;
                                     $$.result->type = t_float;
                                     $$.result->value = $1;
 			                            }
   | FLOAT                     		{ //printf(expr -> INT\n");
-			                              printf("%.2f",$1);
+			                              // printf("%.2f",$1);
 			                              temp_add(&$$.result);
 			                              $$.code = NULL;
                                     $$.result->type = t_float;
@@ -242,7 +257,6 @@ indice: // store multiple indexs for multiple dimensions arrays
   | INDEX indice      {
                         tmp_dims[tmp_dims_index] = $1;
                         tmp_dims_index++;
-                        printf("DIM++ %d\n", tmp_dims_index);
                       }
   ;
 

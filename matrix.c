@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "matrix.h"
 
 matrix matrix_new(int rows, int cols){
@@ -15,6 +16,7 @@ int array_dimsToSize(int* dims, int D){
 	for (int i=0; i<D; i++){
 		size*=dims[i];
 	}
+	// printf("dimsToSize size : %d\n", size);
 	return size;
 }
 
@@ -48,7 +50,8 @@ void matrix_print(matrix m){
 
 void array_print(float* arr, FILE* out) {
   unsigned int i;
-  for(i=0; i < (sizeof(arr)/sizeof(float)) ; i++){
+	//printf("arrayprint size : %d\n",sizeof(arr));
+  for(i=0; arr[i+1] != INFINITY  ; i++){
 		fprintf(out,"%.2f, ",arr[i]);
   }
   fprintf(out,"%.2f\n",arr[i]);
@@ -164,9 +167,20 @@ float* arr_cpy_tmp(float* tmp, int size){
   float* res = malloc(size * sizeof(float));
   int j= size-1;
   for(int i=0; i<size ; i++){
-    res[j] = tmp[i]; // tmp is backward recorded
-		//printf("arrcpy %d val: %.2f\n",j,tmp[i]);
+    if (tmp[j] == INFINITY){ // mean declaration is missing
+			// printf("infinity\n" );
+			j--; i--; // decale the copie to jump after the inf values
+			continue;
+		}
+		res[j] = tmp[i]; // tmp is backward recorded
+		// printf("arrcpy j:%d, i:%d, val: %.2f\n",j,i,tmp[i]);
     j--;
   }
   return res;
+}
+
+void array_fillWithZero(array* arr, int count){
+	for(int i=count; i<arr->size ; i++){
+		arr->values[i] = 0.;
+	}
 }
