@@ -175,9 +175,3 @@ float* arr_cpy_tmp(float* tmp, int size){
   }
   return res;
 }
-
-void array_fillWithZero(array* arr, int count){
-	for(int i=count; i<arr->size ; i++){
-		arr->values[i] = 0.;
-	}
-}

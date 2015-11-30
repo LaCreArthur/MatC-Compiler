@@ -1,7 +1,7 @@
 int main() {
 	/*bonsoir*/
-	float ia = 1.5 + 1 ;
-	int test = 5;
- 	float tab[2][2][2] = {1.0,2.0,3.0};
+	float a = 1.5 + 1 ;
+	int t = 2.8;
+	matrix m[2][2]={1.2,1.2,1.2,1.2};
 
 }

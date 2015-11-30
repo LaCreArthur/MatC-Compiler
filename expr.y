@@ -74,8 +74,10 @@ stmnt:
   ';'
 
   | TYPE ID affect               { //printf(" Type : %d !\n", $1);
-                                    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,1); // type id res quad
+                                    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,1);
                                     quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
+                                    int tested = 2.5 + 2.5;
+                                    printf("test : %d\n ", tested);
                                   }
   | TYPE ID indice affect         {
                                     if($1 == t_int || $1 == t_bool){ // wrong array type
@@ -94,8 +96,19 @@ stmnt:
                                       struct symbol* new_id = affectation($1,$2,$4.result, $4.code,1);
                                       quad_add(&code, quad_gen(eq, $4.result,NULL, new_id));
                                     }
+
+                                    tmp_arr_index = 0;
+                                    tmp_dims_index = 0;
+                                    for (int i=0; i<ARRAY_MAX_SIZE; i++) {
+                                      tmp_arr[i] = INFINITY;
+                                    }
+                                    for (int i=0; i<DIMS_MAX_SIZE; i++) {
+                                      tmp_dims[i] = 0;
+                                    }
                                   }
-  // | TYPE ID INDICE INDICE affect  { printf("___matrix spoted [%d][%d]\n", $3, $4);}
+  | ID indice affect              {
+                                    // access to an element of the array
+                                  }
   | ID affect                     {
                                     if (affectation(0,$1,$2.result, $2.code,0) == NULL) { // arg char* type is not needed
                                           column-=strlen($1)+3;
@@ -145,15 +158,10 @@ affect:
                                     temp_add(&$$.result);
                                     $$.code = NULL;
                                     $$.result->type = t_arr;
-                                    $$.result->value = INFINITY;
-                                    $$.result->arr = array_new(tmp_dims, tmp_dims_index);
+                                    $$.result->value = INFINITY; // no float value for arrays
+                                    $$.result->arr = array_new(tmp_dims, tmp_dims_index); 
                                     $$.result->arr->values=arr_cpy_tmp(tmp_arr,$$.result->arr->size);
-                                    // check if there are missing declarations
-                                    if (tmp_arr_index < $$.result->arr->size){
-                                      array_fillWithZero($$.result->arr, tmp_arr_index);
-                                    }
                                     $$.result->arr->values[$$.result->arr->size] = INFINITY;
-                                    // $$.result->arr = arr_cpy_tmp(tmp_arr, 4);
                                   }
   ;
 
@@ -178,7 +186,7 @@ values: // tab is backward recorded
                           tmp_dims[tmp_dims_index] = $1;
                           tmp_dims_index++;
                         }
-    | INDEX indice      {
+    | indice INDEX      {
                           tmp_dims[tmp_dims_index] = $1;
                           tmp_dims_index++;
                         }

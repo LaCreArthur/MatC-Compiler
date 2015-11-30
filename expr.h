@@ -2,6 +2,8 @@
 #define __EXPR__H__
 
 
+#define ARRAY_MAX_SIZE 100
+#define DIMS_MAX_SIZE 10
 // exit status ---
 #define FAIL 1
 #define SUCCESS 2

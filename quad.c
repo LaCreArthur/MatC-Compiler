@@ -62,7 +62,7 @@ void quad_toMips (struct quad* list, FILE* out){
 	fprintf(out, "\t.text\nmain:\n"); // init code segment
 	while (list != NULL) {
 		if(list->res != NULL) {
-			if (list->res->type == t_float) {
+			if (list->res->type == t_float) { 
 				fprintf(out,"#load\n\tl.s $f0, %s\n", list->res->id); // load res into $f0
 				if (list->arg1 != NULL) fprintf(out,"\tl.s $f1, %s\n", list->arg1->id); // load arg1 into $f1
 				if (list->arg2 != NULL) fprintf(out,"\tl.s $f2, %s\n", list->arg2->id); // load arg2 into $f2
@@ -78,7 +78,7 @@ void quad_toMips (struct quad* list, FILE* out){
 				}
 				fprintf(out, "\ts.s $f0, %s\n",list->res->id); // store the new res into the res data seg
 			}
-			else {
+			else { // else mean int => only int and float is supported for now
 				fprintf(out,"#load\n\tlw $t0, %s\n", list->res->id);
 				if (list->arg1 != NULL) fprintf(out,"\tlw $t1, %s\n", list->arg1->id);
 				if (list->arg2 != NULL) fprintf(out,"\tlw $t2, %s\n", list->arg2->id);
