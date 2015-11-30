@@ -36,11 +36,11 @@ noaplha				[\'\"\{\};,]
 "matrix"	    { printf("%s", yytext); column_incr; yylval.int_value = 2; return TYPE; }
 "main"				{	printf("main"); column_incr; return MAIN;}
 "print"				{	printf("%s", yytext); column_incr; return PRINT;}
-"printf"			{	printf("%s", yytext); column_incr;; return PRINTF;}
-"printmat"		{	printf("%s", yytext); column_incr;; return PRINTM;}
+"printf"			{	printf("%s", yytext); column_incr; return PRINTF;}
+"printmat"		{	printf("%s", yytext); column_incr; return PRINTM;}
 
-{int}					{ printf("%s", yytext); yylval.int_value = atoi(yytext); column_incr; return(INT);}
-{float}				{ printf("%s", yytext); yylval.float_value=atof(yytext); column_incr; return(FLOAT);}
+{int}					{ yylval.int_value = atoi(yytext); column_incr; return(INT);}
+{float}				{ yylval.float_value=atof(yytext); column_incr; return(FLOAT);}
 {id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); column_incr; yylval.str_value = strdup(yytext); return ID;}
 {index}				{ printf("%s", yytext); yylval.int_value = atoi(yytext+1); column_incr; return(INDEX);}
 "++"|"--"			{ printf("%s", yytext); yylval.str_value = yytext; column_incr; return INCRorDECR;}

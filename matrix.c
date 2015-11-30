@@ -164,17 +164,14 @@ void matrix_free(matrix* m){
 }
 
 float* arr_cpy_tmp(float* tmp, int size){
-  float* res = malloc(size * sizeof(float));
-  int j= size-1;
+  float* res = calloc(size, sizeof(float));
+  int j=0;
   for(int i=0; i<size ; i++){
     if (tmp[j] == INFINITY){ // mean declaration is missing
-			// printf("infinity\n" );
-			j--; i--; // decale the copie to jump after the inf values
 			continue;
 		}
-		res[j] = tmp[i]; // tmp is backward recorded
-		// printf("arrcpy j:%d, i:%d, val: %.2f\n",j,i,tmp[i]);
-    j--;
+		res[j] = tmp[i];
+    j++;
   }
   return res;
 }

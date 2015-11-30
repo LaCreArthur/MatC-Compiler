@@ -16,7 +16,6 @@
   int tmp_arr_index = 0;
   int tmp_dims[10];
   int tmp_dims_index = 0;
-  int tested[2][2];
 
 %}
 
@@ -75,11 +74,10 @@ stmnt:
   ';'
 
   | TYPE ID affect               { //printf(" Type : %d !\n", $1);
-                                    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,1);
+                                    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,1); // type id res quad
                                     quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
                                   }
   | TYPE ID indice affect         {
-                                    printf("tested %d", tested[3]);
                                     if($1 == t_int || $1 == t_bool){ // wrong array type
                                       fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of "
                                                      "type '%s'",filename, line, column, symbol_typeToStr($1));
@@ -166,14 +164,25 @@ values: // tab is backward recorded
                                     }
                                     tmp_arr[tmp_arr_index] = $1;
                                     tmp_arr_index++;
-                                    // printf("%.2f,",$1);
+                                    printf("%.2f",$1);
                                   }
-  | FLOAT ',' values              {
-                                    tmp_arr[tmp_arr_index] = $1;
+  | values ',' FLOAT              {
+                                    tmp_arr[tmp_arr_index] = $3;
                                     tmp_arr_index++;
-                                    // printf("%.2f,",$1);
+                                    printf("%.2f",$3);
                                   }
   ;
+
+  indice: // store multiple indexs for multiple dimensions arrays
+      INDEX             {
+                          tmp_dims[tmp_dims_index] = $1;
+                          tmp_dims_index++;
+                        }
+    | INDEX indice      {
+                          tmp_dims[tmp_dims_index] = $1;
+                          tmp_dims_index++;
+                        }
+    ;
 
 E:
   //   E "or" E                      {
@@ -215,14 +224,14 @@ E:
 			                            }
   | '(' E ')'               			{$$ = $2;}
   | INT                     			{ //printf("expr -> INT\n");
-			                              // printf("%d",$1);
+			                              printf("%d",$1);
 			                              temp_add(&$$.result);
 			                              $$.code = NULL;
                                     $$.result->type = t_float;
                                     $$.result->value = $1;
 			                            }
   | FLOAT                     		{ //printf(expr -> INT\n");
-			                              // printf("%.2f",$1);
+			                              printf("%.2f",$1);
 			                              temp_add(&$$.result);
 			                              $$.code = NULL;
                                     $$.result->type = t_float;
@@ -250,17 +259,10 @@ E:
 																	}
   ;
 
-indice: // store multiple indexs for multiple dimensions arrays
-    INDEX             { tmp_dims[tmp_dims_index] = $1;
-                        tmp_dims_index++;
-                      }
-  | INDEX indice      {
-                        tmp_dims[tmp_dims_index] = $1;
-                        tmp_dims_index++;
-                      }
-  ;
+
 
 %%
+
 int yyerror(char *s) {
   printf("%s\n",s);
   return 0;
