@@ -51,6 +51,6 @@ noaplha				[\'\"\{\};,]
 {comment}     { printf("%s", yytext); column_incr;}
 
 {noaplha}			{ printf("%c", yytext[0]); return(yytext[0]);}
-. 						{ printf("[lex] unknonw char : %s\n", yytext);}
+. 						{ printf("[lex] unknown char : %s\n", yytext);}
 
 %%
