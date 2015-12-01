@@ -165,7 +165,7 @@ affect:
                                   }
   ;
 
-values: // tab is backward recorded
+values:
   FLOAT                           {
                                     if ($$ == NULL) {
                                       printf("$$ is null");
