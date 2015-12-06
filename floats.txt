@@ -1,0 +1,12 @@
+int main() {
+	/*bonsoir*/
+	float a = 1.5 + 1 ;
+        float b = .5;
+        float c = 5.;
+        float d = 1;
+        float e = 1.4E10;
+        float f = .4e-4;
+        float g = 6.e13;
+        float h = 7.E-14;
+
+}

@@ -10,8 +10,8 @@ int column = 1;
 
 number				[0-9]
 int						{number}+
-exp						[Ee][+-]?{number}
-float					{int}("."{int})?{exp}?
+exp						[Ee][+-]?{number}+
+float					{number}*"."{number}
 char		    	[a-zA-Z]
 id			    	{char}({char}|{int})*
 op						[+*/()=-]
@@ -40,9 +40,11 @@ noaplha				[\'\"\{\};,]
 "printmat"		{	printf("%s", yytext); column_incr; return PRINTM;}
 
 {int}					{ yylval.int_value = atoi(yytext); column_incr; return(INT);}
-{float}				{ yylval.float_value=atof(yytext); column_incr; return(FLOAT);}
+{float}+({exp})?	{ yylval.float_value=atof(yytext); column_incr; return(FLOAT); }
+{float}*({exp})?  { yylval.float_value=atof(yytext); column_incr; return(FLOAT); }
 {id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); column_incr;
 								yylval.str_value = strdup(yytext); return ID;}
+
 {index}				{ printf("%s", yytext); yylval.int_value = atoi(yytext+1); column_incr; return(INDEX);}
 "++"|"--"			{ printf("%s", yytext); yylval.str_value = yytext; column_incr; return INCRorDECR;}
 {string}			{ if(DEBUG) printf(" str_");  printf("%s", yytext); yylval.str_value = strdup(yytext);
@@ -51,6 +53,6 @@ noaplha				[\'\"\{\};,]
 {comment}     { printf("%s", yytext); column_incr;}
 
 {noaplha}			{ printf("%c", yytext[0]); return(yytext[0]);}
-. 						{ printf("[lex] unknonw char : %s\n", yytext);}
+. 						{ printf("[lex] unknown char : %s\n", yytext);}
 
 %%
