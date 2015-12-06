@@ -41,10 +41,12 @@ noaplha				[\'\"\{\};,]
 
 {int}					{ yylval.int_value = atoi(yytext); column_incr; return(INT);}
 {float}				{ yylval.float_value=atof(yytext); column_incr; return(FLOAT);}
-{id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); column_incr; yylval.str_value = strdup(yytext); return ID;}
+{id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); column_incr;
+								yylval.str_value = strdup(yytext); return ID;}
 {index}				{ printf("%s", yytext); yylval.int_value = atoi(yytext+1); column_incr; return(INDEX);}
 "++"|"--"			{ printf("%s", yytext); yylval.str_value = yytext; column_incr; return INCRorDECR;}
-{string}			{ if(DEBUG) printf(" str_");  printf("%s", yytext); yylval.str_value = strdup(yytext); column_incr; return STR;}
+{string}			{ if(DEBUG) printf(" str_");  printf("%s", yytext); yylval.str_value = strdup(yytext);
+								column_incr; return STR;}
 {op}					{ printf("%c", yytext[0]); column_incr; return(yytext[0]);}
 {comment}     { printf("%s", yytext); column_incr;}
 
