@@ -62,7 +62,7 @@ void quad_toMips (struct quad* list, FILE* out){
 	fprintf(out, "\t.text\nmain:\n"); // init code segment
 	while (list != NULL) {
 		if(list->res != NULL) {
-			if (list->res->type == t_float) { 
+			if (list->res->type == t_float) {
 				fprintf(out,"#load\n\tl.s $f0, %s\n", list->res->id); // load res into $f0
 				if (list->arg1 != NULL) fprintf(out,"\tl.s $f1, %s\n", list->arg1->id); // load arg1 into $f1
 				if (list->arg2 != NULL) fprintf(out,"\tl.s $f2, %s\n", list->arg2->id); // load arg2 into $f2
@@ -121,4 +121,43 @@ char* quad_opToStr(enum Op op){
 		default: break;
 	}
 	return ""; // avoid warning
+}
+
+/*********************************\
+| quad_list for conditionnal expr |
+\*********************************/
+
+struct quad_list* quad_list_new(struct quad* node){
+	struct quad_list* new = malloc(sizeof(struct quad_list));
+	new->node = node;
+	new->next = NULL;
+	return new;
+}
+
+void quad_list_add(struct quad_list** dest, struct quad_list* src){
+	if (*dest==NULL) {
+		*dest = src;
+	} else {
+		struct quad_list* new = *dest;
+		while (new->next != NULL)
+			new = new->next;
+		new->next = src;
+	}
+}
+
+void quad_list_complete(struct quad_list* list, struct symbol* label){
+	while (list != NULL){
+		list->node->res = label;
+		list = list->next;
+	}
+}
+
+void quad_list_print(struct quad_list* list){
+	int i=0;
+	while(list != NULL){
+		printf("quad %d :\n",++i);
+		quad_print(list->node);
+		printf("\n");
+		list=list->next;
+	}
 }

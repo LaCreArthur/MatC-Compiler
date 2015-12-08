@@ -10,13 +10,16 @@ id			    	{char}({char}|{int})*
 
 %%
 
+"else"	{return ELSE;}
 {id}		{yylval.string = strdup(yytext); return ID;}
 {int}		{yylval.value = atoi(yytext); return NUM;}
 "&&"		{return AND;}
 "||"		{return OR;}
 "!"			{return NOT;}
-">"			{return yytext[0];}
-"="			{return yytext[0];}
+">"			{return yytext[0];} /* condition */
+"+"			{return yytext[0];} /* expression */
+"="			{return yytext[0];} /* stmnt */
+";"			{return yytext[0];} /* stmnt */
 [()]		{return yytext[0];}
 \n			{return yytext[0];}
 [\t ]		{ }

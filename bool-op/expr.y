@@ -30,49 +30,43 @@
 	} quadlist;
 }
 
-%token OR AND NOT
+%token OR AND NOT '(' ')' ELSE
+%token '>' '+' '=' ';'
 %token <string> ID
 %token <value> NUM
 %type <codegen> expr
+%type <codegen> stmnt
 %type <quadlist> condition
 %left OR
 %left AND
 %left NOT
+%left '+' '='
 
 %%
 
 axiom:
-    condition '\n'
-                            {
-                              printf("Match !\n");
-                              struct symbol* cst_true   = symbol_newcst(&tds, 1);
-                              struct symbol* cst_false  = symbol_newcst(&tds, 0);
-                              struct symbol* result     = symbol_add(tds, "result");
-                              struct quad* is_true;
-                              struct quad* jump;
-                              struct quad* is_false;
-                              struct symbol* label_true; // dans if then tag else tagoto : premier tag
-                              struct symbol* label_false; // tagoto
+    condition stmnt ELSE stmnt'\n'
+      {
+        printf("Match !\n");
+        struct quad* jump;
+        struct symbol* label_true;  // equivaut au premier tag dans if then tag else tagoto
+        struct symbol* label_false; // deuxieme tag : tagoto
 
-                              label_true  = symbol_newcst(&tds, next_quad);
-                              is_true     = quad_gen(next_quad++, ':', cst_true, NULL, result);
+        label_true          = symbol_newcst(&tds, $2.code->label);          // label of the 1st stmnt
+        // nextquad a la valeur du dernier label du 2nd stmnt donc +1 jump juste après
+        struct symbol* next = symbol_newcst(&tds, next_quad+1);             // goto after 2nd stmnt
+        jump                = quad_gen(next_quad++, 'G', NULL, NULL, next); // jump after stmnt false
+        label_false         = symbol_newcst(&tds, $4.code->label);          // label of the 2nd stmnt
 
-                              struct symbol* next       = symbol_newcst(&tds, next_quad+2);
-                              jump        = quad_gen(next_quad++, 'G', NULL, NULL, next);
+        quad_list_complete($1.truelist, label_true);
+        quad_list_complete($1.falselist, label_false);
 
-                              label_false = symbol_newcst(&tds, next_quad);
-                              is_false    = quad_gen(next_quad, ':', cst_false, NULL, result);
-
-                              quad_list_complete($1.truelist, label_true);
-                              quad_list_complete($1.falselist, label_false);
-
-                              code = $1.code;
-                              quad_add(&code, is_true);
-                              quad_add(&code, jump);
-                              quad_add(&code, is_false);
-                              return 0;
-
-                            }
+        code = $1.code;           // condition code
+        quad_add(&code, $2.code); // stmnt for true
+        quad_add(&code, jump);
+        quad_add(&code, $4.code); // stmnt for false
+        return 0;
+      }
   ;
 
 condition:
@@ -126,24 +120,22 @@ condition:
         $$.truelist = $2.truelist;
         $$.falselist = $2.falselist;
       }
-  | expr '=' expr
-      {
-        struct symbol* new_id;
-        quad_add(&code, $3.code); // store the E code
-
-        if((new_id = symbol_find(tds, $1.result->id)) != NULL){ // new id already existe
-            fprintf(stderr,"error: redeclaration of with no linkage");
-            exit(EXIT_FAILURE);
-        } else {
-            new_id = symbol_add(tds, $1.result->id);
-            new_id->value = (int)$3.result->value; }
-
-        quad_add(&code, quad_gen(next_quad++,'=', $3.result,NULL, new_id)); // store this stmnt code
-      }
   ;
 
 expr:
-    ID
+  expr '+' expr
+      {
+        $$.code = $1.code;
+        quad_add(&$$.code,$3.code);
+        quad_add(&$$.code, quad_gen(next_quad++,'+',$1.result,$3.result,$$.result));
+      }
+  | expr '=' expr
+      {
+        $$.code = $1.code;
+        quad_add(&$$.code,$3.code);
+        quad_add(&$$.code, quad_gen(next_quad++,'=',$1.result,$3.result,$$.result));
+      }
+  | ID
       {
         printf("expr -> ID (%s)\n", $1);
         $$.result = symbol_find(tds, $1);
@@ -165,6 +157,38 @@ expr:
   ;
 
 
+stmnt:
+  expr ';'
+      {
+        $$.code = $1.code;
+      }
+  | expr ';' stmnt
+      {
+        $$.code = $1.code;
+        quad_add(&$$.code,$3.code);
+      }
+  | ';' {$$.code = NULL;}
+
+  // | expr '=' expr
+  //     {
+  //       struct symbol* new_id;
+  //       quad_add(&$$.code, $3.code); // store the E code
+  //
+  //       if((new_id = symbol_find(tds, $1.result->id)) != NULL){ // new id already existe
+  //           fprintf(stderr,"error: redeclaration of with no linkage");
+  //           exit(EXIT_FAILURE);
+  //       } else {
+  //           new_id = symbol_add(tds, $1.result->id);
+  //           new_id->value = (int)$3.result->value; }
+  //
+  //       quad_add(&$$.code, quad_gen(next_quad++,'=', $3.result,NULL, new_id)); // store this stmnt code
+  //     }
+  // |
+  //     {
+  //       $$.code = NULL;
+  //     }
+  ;
+
   %%
 
 
@@ -179,8 +203,8 @@ expr:
     /////////////////////////////
     printf("\n");
 
-    printf("\ntable :\n");
-    symbol_print(tds);
+    // printf("\ntable :\n");
+    // symbol_print(tds);
     printf("\ncode :\n");
     quad_print(code);
 

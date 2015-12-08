@@ -1,4 +1,7 @@
 %{
+  #ifdef YYDEBUG
+    yydebug=1;
+  #endif
   #include <stdio.h>
   #include <stdlib.h>
 	#include <string.h>
@@ -203,7 +206,7 @@ values:
     }
     | indice INDEX
     {
-      tmp_dims[tmp_dims_index] = $1;
+      tmp_dims[tmp_dims_index] = $2;
       tmp_dims_index++;
     }
     ;
