@@ -91,12 +91,13 @@ condition:
   | condition OR condition
                             {
                               printf("cond -> expr OR expr\n");
-                              // quad_list_complete($1.falselist, $3);
-                              // $$.code = $1.code;
-                              // quad_list_add(&$$.code, $3.code);
-                              // $$.falselist = $3.falselist;
-                              // $$.truelist = $1.truelist;
-                              // quad_list_add(&$$.truelist, $3.truelist);
+                              struct symbol* tag  = symbol_newcst(&tds, $3.truelist->node->label);
+                              quad_list_complete($1.falselist, tag);
+                              $$.code = $1.code;
+                              quad_add(&$$.code, $3.code);
+                              $$.falselist = $3.falselist;
+                              $$.truelist = $1.truelist;
+                              quad_list_add(&$$.truelist, $3.truelist);
                               // false liste de 1er expr est pack patch au debut du deuxieme
                             }
   | condition AND condition
@@ -113,6 +114,9 @@ condition:
   | '(' condition ')'
                             {
                               printf("cond -> ( expr ) \n");
+                              $$.code = $2.code;
+                              $$.truelist = $2.truelist;
+                              $$.falselist = $2.falselist;
                             }
   | expr '=' expr           {
                               struct symbol* new_id;
