@@ -76,83 +76,92 @@ axiom:
   ;
 
 condition:
-    expr '>' expr
-                            {
-                              printf("cond -> expr > expr\n");
-                              struct quad* goto_true   = quad_gen(next_quad++, '>', $1.result, $3.result, NULL); // res null -> trou
-                              struct quad* goto_false  = quad_gen(next_quad++, 'G', NULL, NULL, NULL);
-                              $$.code = $1.code;
-                              quad_add(&$$.code, $3.code);
-                              quad_add(&$$.code, goto_true);
-                              quad_add(&$$.code, goto_false);
-                              $$.truelist   = quad_list_new(goto_true);
-                              $$.falselist  = quad_list_new(goto_false);
-                            }
+    expr '>' expr // remplacer '>' par bool_op
+      {
+        printf("cond -> expr > expr\n");
+                                        // remplacer char par enum bool_op
+        struct quad* goto_true   = quad_gen(next_quad++, '>', $1.result, $3.result, NULL); // res null -> trou
+        struct quad* goto_false  = quad_gen(next_quad++, 'G', NULL, NULL, NULL);
+        $$.code = $1.code;
+        quad_add(&$$.code, $3.code);
+        quad_add(&$$.code, goto_true);
+        quad_add(&$$.code, goto_false);
+        $$.truelist   = quad_list_new(goto_true);
+        $$.falselist  = quad_list_new(goto_false);
+      }
   | condition OR condition
-                            {
-                              printf("cond -> expr OR expr\n");
-                              struct symbol* tag  = symbol_newcst(&tds, $3.truelist->node->label);
-                              quad_list_complete($1.falselist, tag);
-                              $$.code = $1.code;
-                              quad_add(&$$.code, $3.code);
-                              $$.falselist = $3.falselist;
-                              $$.truelist = $1.truelist;
-                              quad_list_add(&$$.truelist, $3.truelist);
-                              // false liste de 1er expr est pack patch au debut du deuxieme
-                            }
+      {
+        printf("cond -> expr OR expr\n");
+        struct symbol* tag  = symbol_newcst(&tds, $3.truelist->node->label);
+        quad_list_complete($1.falselist, tag);
+        $$.code = $1.code;
+        quad_add(&$$.code, $3.code);
+        $$.falselist = $3.falselist;
+        $$.truelist = $1.truelist;
+        quad_list_add(&$$.truelist, $3.truelist);
+        // false liste de 1er expr est pack patch au debut du deuxieme
+      }
   | condition AND condition
-                            {
-                              printf("cond -> expr AND expr\n");
-                            }
+      {
+        printf("cond -> expr AND expr\n");
+        struct symbol* tag  = symbol_newcst(&tds, $3.truelist->node->label);
+        quad_list_complete($1.truelist, tag);
+        $$.code = $1.code;
+        quad_add(&$$.code, $3.code);
+        $$.falselist = $1.falselist;
+        $$.truelist = $3.truelist;
+        quad_list_add(&$$.falselist, $3.falselist);
+      }
   | NOT condition
-                            {
-                              printf("cond -> NOT expr\n");
-                              $$.code = $2.code;
-                              $$.truelist = $2.falselist;
-                              $$.falselist = $2.truelist;
-                            }
+      {
+        printf("cond -> NOT expr\n");
+        $$.code = $2.code;
+        $$.truelist = $2.falselist;
+        $$.falselist = $2.truelist;
+      }
   | '(' condition ')'
-                            {
-                              printf("cond -> ( expr ) \n");
-                              $$.code = $2.code;
-                              $$.truelist = $2.truelist;
-                              $$.falselist = $2.falselist;
-                            }
-  | expr '=' expr           {
-                              struct symbol* new_id;
-                              quad_add(&code, $3.code); // store the E code
+      {
+        printf("cond -> ( expr ) \n");
+        $$.code = $2.code;
+        $$.truelist = $2.truelist;
+        $$.falselist = $2.falselist;
+      }
+  | expr '=' expr
+      {
+        struct symbol* new_id;
+        quad_add(&code, $3.code); // store the E code
 
-                              if((new_id = symbol_find(tds, $1.result->id)) != NULL){ // new id already existe
-                                  fprintf(stderr,"error: redeclaration of with no linkage");
-                                  exit(EXIT_FAILURE);
-                              } else {
-                                  new_id = symbol_add(tds, $1.result->id);
-                                  new_id->value = (int)$3.result->value; }
+        if((new_id = symbol_find(tds, $1.result->id)) != NULL){ // new id already existe
+            fprintf(stderr,"error: redeclaration of with no linkage");
+            exit(EXIT_FAILURE);
+        } else {
+            new_id = symbol_add(tds, $1.result->id);
+            new_id->value = (int)$3.result->value; }
 
-                              quad_add(&code, quad_gen(next_quad++,'=', $3.result,NULL, new_id)); // store this stmnt code
-                            }
+        quad_add(&code, quad_gen(next_quad++,'=', $3.result,NULL, new_id)); // store this stmnt code
+      }
   ;
 
 expr:
     ID
-                            {
-                              printf("expr -> ID (%s)\n", $1);
-                              $$.result = symbol_find(tds, $1);
-                              if ($$.result == NULL)
-                                $$.result = symbol_add(tds, $1);
-                              $$.code = NULL;
-                            }
+      {
+        printf("expr -> ID (%s)\n", $1);
+        $$.result = symbol_find(tds, $1);
+        if ($$.result == NULL)
+          $$.result = symbol_add(tds, $1);
+        $$.code = NULL;
+      }
   | NUM
-                            {
-                              printf("expr -> NUM (%d)\n", $1);
-                              if(tds == NULL) {
-                                tds = symbol_newcst(&tds, $1);
-                                $$.result = tds;
-                              }
-                              else
-                                $$.result = symbol_newcst(&tds, $1);
-                              $$.code=NULL;
-                            }
+      {
+        printf("expr -> NUM (%d)\n", $1);
+        if(tds == NULL) {
+          tds = symbol_newcst(&tds, $1);
+          $$.result = tds;
+        }
+        else
+          $$.result = symbol_newcst(&tds, $1);
+        $$.code=NULL;
+      }
   ;
 
 
