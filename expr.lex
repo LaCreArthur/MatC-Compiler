@@ -11,7 +11,7 @@ int column = 1;
 number				[0-9]
 int						{number}+
 exp						[Ee][+-]?{number}+
-float					{number}*"."{number}
+float					{number}*("."{number}*)?
 char		    	[a-zA-Z]
 id			    	{char}({char}|{int})*
 op						[+*/()=-]
