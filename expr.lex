@@ -15,7 +15,7 @@ float					{number}*"."{number}
 char		    	[a-zA-Z]
 id			    	{char}({char}|{int})*
 op						[+*/()=-]
-
+/*relop					"=="|"!="|">"|"<"|">="|"<="*/
 newline				"\n"
 escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"|" "
 types					matrix|int|float
@@ -38,6 +38,17 @@ noaplha				[\'\"\{\};,]
 "print"				{	printf("%s", yytext); column_incr; return PRINT;}
 "printf"			{	printf("%s", yytext); column_incr; return PRINTF;}
 "printmat"		{	printf("%s", yytext); column_incr; return PRINTM;}
+"if"					{	printf("%s", yytext); column_incr; return IF;}
+"else"				{	printf("%s", yytext); column_incr; return ELSE;}
+"=="					{	printf("%s", yytext); column_incr; yylval.int_value = 9;  return RELOP;} /* 9 : int code for the enum */
+"!="					{	printf("%s", yytext); column_incr; yylval.int_value = 10; return RELOP;}
+">"						{	printf("%s", yytext); column_incr; yylval.int_value = 11; return RELOP;}
+"<"						{	printf("%s", yytext); column_incr; yylval.int_value = 12; return RELOP;}
+">="					{	printf("%s", yytext); column_incr; yylval.int_value = 13; return RELOP;}
+"<="					{	printf("%s", yytext); column_incr; yylval.int_value = 14; return RELOP;}
+"!"						{	printf("%s", yytext); column_incr; yylval.int_value = 15; return NOT;}
+"&&"					{	printf("%s", yytext); column_incr; yylval.int_value = 16; return AND;}
+"||"					{	printf("%s", yytext); column_incr; yylval.int_value = 17; return OR;}
 
 {int}					{ yylval.int_value = atoi(yytext); column_incr; return(INT);}
 {float}+({exp})?	{ yylval.float_value=atof(yytext); column_incr; return(FLOAT); }
@@ -45,7 +56,7 @@ noaplha				[\'\"\{\};,]
 {id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); column_incr;
 								yylval.str_value = strdup(yytext); return ID;}
 
-{index}				{ printf("%s", yytext); yylval.int_value = atoi(yytext+1); column_incr; return(INDEX);}
+{index}				{ if(DEBUG) printf(" ix_"); printf("%s", yytext); yylval.int_value = atoi(yytext+1); column_incr; return(INDEX);}
 "++"|"--"			{ printf("%s", yytext); yylval.str_value = yytext; column_incr; return INCRorDECR;}
 {string}			{ if(DEBUG) printf(" str_");  printf("%s", yytext); yylval.str_value = strdup(yytext);
 								column_incr; return STR;}

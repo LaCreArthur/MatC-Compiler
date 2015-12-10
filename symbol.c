@@ -21,6 +21,12 @@ struct symbol* symbol_newtemp(struct symbol** tds) {
     return symbol_add(*tds, temp_name);
 }
 
+struct symbol* symbol_newcst(struct symbol** tds, int val){
+  char temp_name[32];
+  snprintf(temp_name, 32, "%d", val);
+  return symbol_add(*tds, temp_name);
+}
+
 struct symbol* symbol_add (struct symbol* symb, char* id) {
   struct symbol* temp = symb;
   char *id_dup = strdup(id);

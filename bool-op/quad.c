@@ -38,7 +38,7 @@ void quad_print (struct quad* list){
 			if(list->arg1 != NULL)
 				printf("%s ", list->arg1->id);
 		}
-		if (list->op == '>') {
+		else if (list->op == '>') {
 			if(list->arg1 != NULL)
 				printf("if %s ", list->arg1->id);
 			if (list->arg2 != NULL)
@@ -46,9 +46,17 @@ void quad_print (struct quad* list){
 			if(list->res != NULL)
 				printf(" goto %s ", list->res->id);
 		}
-		if (list->op == 'G') {
+		else if (list->op == 'G') {
 			if(list->res != NULL)
 				printf(" goto %s ", list->res->id);
+		}
+		else {
+			if(list->arg1 != NULL)
+				printf("%s ", list->arg1->id);
+			if (list->arg2 != NULL)
+				printf("%c %s",list->op, list->arg2->id);
+			if(list->res != NULL)
+				printf(" = %s ", list->res->id);
 		}
 		printf("\n");
 		list = list->next;

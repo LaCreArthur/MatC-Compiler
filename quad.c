@@ -5,8 +5,10 @@
 #include "quad.h"
 
 struct quad* quad_gen(int op,struct symbol* arg1,struct symbol* arg2,struct symbol* res){
+	static int current_label = 1;
 	struct quad* new = malloc(sizeof(*new));
 	if (new == NULL) perror("quad_gen fail : ");
+	new->label = current_label++;
 	new->op = op;
 	new->arg1 = arg1;
 	new->arg2 = arg2;
@@ -34,14 +36,28 @@ void quad_add (struct quad** list, struct quad* new){
 void quad_print (struct quad* list){
 	if (list == NULL) printf("quad_print : code null\n");
 	while (list != NULL) {
-		if(list->res != NULL) {
-			if (list->op == prnt) printf("print(%s)", list->res->id);
-			else printf("%7s = ", list->res->id);
+		printf("%d :\t", list->label);
+		if (list->op > 8 && list-> op < 15) { // relop
+			printf("if %s %s %s goto label%s",
+			 	list->arg1->id, quad_opToStr(list->op), list->arg2->id, list->res->id);
 		}
-		if(list->arg1 != NULL)
-			printf("%7s ", list->arg1->id);
-		if (list->arg2 != NULL)
-			printf("%s%7s",quad_opToStr(list->op), list->arg2->id); // when id = expr, arg2 is NULL
+		else if (list->op == label) {
+			printf("label %s:",list->res->id);
+		}
+		else {
+			if(list->res != NULL) {
+				if (list->op == prnt) printf("print(%s)", list->res->id);
+				else if (list->op == Goto){
+					printf("\tgoto label%s", list->res->id);
+				}
+				else printf("%7s = ", list->res->id);
+			}
+			if(list->arg1 != NULL) printf("%7s ", list->arg1->id);
+			if (list->arg2 != NULL)  {
+				printf("%s",quad_opToStr(list->op));
+				printf("%7s",list->arg2->id); // when id = expr, arg2 is NULL
+			}
+	}
 		printf("\n");
 		list = list->next;
 	}
@@ -118,6 +134,8 @@ char* quad_opToStr(enum Op op){
 		case not:  { return "!"; }
 		case and:  { return "&&";}
 		case or:   { return "||";}
+		case Goto: { return "goto";}
+		case label:{ return "label";}
 		default: break;
 	}
 	return ""; // avoid warning

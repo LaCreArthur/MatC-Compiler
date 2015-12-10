@@ -30,7 +30,7 @@ void expr_add(int op, struct symbol** res_result, struct quad** res_code,
 void exit_msg(int status);
 
 // affect a value to an id by creating a temp symbole that contain the value and a quad "id = temp"
-struct symbol* affectation(int type, char* id, struct symbol* res, struct quad* code, int declare);
+struct symbol* affectation(int type, char* id, struct symbol* res, struct quad** code, struct quad* q, int declare);
 
 
 #endif

@@ -32,18 +32,23 @@
 		struct symbol* result;
 		struct quad* code;
 	} codegen;
-
+  struct {
+    struct quad_list* truelist;
+    struct quad_list* falselist;
+    struct quad* code;
+  } quadlist;
 }
 
-%type <codegen> E affect
+%type <codegen> E affect stmnt block
 %type <dims> indice
 %type <values> values
+%type <quadlist> condition
 
 %token <int_value> INT INDEX TYPE
+%token <int_value> RELOP NOT AND OR
 %token <float_value> FLOAT
 %token <str_value> ID INCRorDECR STR
-%token MAIN PRINT PRINTF PRINTM
-%token <relop> RELOP
+%token MAIN PRINT PRINTF PRINTM IF ELSE
 %token '+' '-' '*' '/'
 %token '(' ')'
 %token END
@@ -51,6 +56,7 @@
 %left '+' '-'
 %left '*' '/'
 %left NEG
+%left RELOP NOT AND OR
 
 %right INCRorDECR
 %right INDEX
@@ -70,18 +76,85 @@ main:
 
 block:
    stmnt block
-  | '}'
+   {
+    if($1.code != NULL) {
+      $$.code = $1.code;
+      printf("(a stmnt code is stored)\n");
+      if($2.code != NULL) {
+        quad_add(&$$.code, $2.code);
+      }
+    }
+    else $$.code = $2.code;
+    code = $$.code;
+  }
+  | IF condition '{' block ELSE '{' block block
+  {
+    struct quad*   jump;
+    struct quad* label_true;  // equivaut a tag dans "if then tag stmnt else tagoto stmnt next"
+    struct quad* label_false; // equivaut a tagoto
+    struct quad* next;        // next block label
+    // if($4.code == NULL) printf("nothing in the if block ! \n");
+    // if($7.code == NULL) printf("nothing in the else block ! \n");
+
+    // label of the 1st stmnt
+    label_true  = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $4.code->label));
+    // goto after 2nd stmnt : jump after stmnt false
+    next        = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $8.code->label));
+    jump        = quad_gen(Goto, NULL, NULL, next->res);
+    // label of the 2nd stmnt
+    label_false = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $7.code->label));
+
+    quad_list_complete($2.truelist, label_true->res);  // backpatching truelist with label_true
+    quad_list_complete($2.falselist, label_false->res); // backpatching falselist with label_false
+
+    $$.code = $2.code;              // condition code
+    quad_add(&$$.code, label_true); // label for true
+    quad_add(&$$.code, $4.code);    // stmnt for true
+    quad_add(&$$.code, jump);       // jump after stmnt false if true
+    quad_add(&$$.code, label_false);// label for false
+    quad_add(&$$.code, $7.code);    // stmnt for false
+    quad_add(&$$.code, next);       // label after stmnt false
+    quad_add(&$$.code, $8.code);    // the rest of the code
+  }
+  | '}' {$$.code = NULL;}
+  ;
+
+condition:
+  E RELOP E
+  {
+    printf("relop %d \n", RELOP);
+    struct quad* goto_true   = quad_gen(slt, $1.result, $3.result, NULL);
+    struct quad* goto_false  = quad_gen(Goto, NULL, NULL, NULL);
+    $$.code = $1.code;
+    quad_add(&$$.code, $3.code);
+    quad_add(&$$.code, goto_true);
+    quad_add(&$$.code, goto_false);
+    $$.truelist   = quad_list_new(goto_true);
+    $$.falselist  = quad_list_new(goto_false);
+  }
+  | condition OR condition
+  {
+    printf("cond -> expr OR expr\n");
+    struct quad* label_false  =
+      quad_gen(label, NULL, NULL, symbol_newcst(&tds, $3.truelist->node->label));
+
+    quad_list_complete($1.falselist, label_false->res);
+    $$.code = $1.code;               // first condition
+    quad_add(&$$.code, label_false); // if first is false goto second
+    quad_add(&$$.code, $3.code);     // second cond
+    $$.falselist = $3.falselist;
+    $$.truelist = $1.truelist;
+    quad_list_add(&$$.truelist, $3.truelist);
+  }
   ;
 
 stmnt:
-  ';' // do nothing
+  ';' {$$.code = NULL;}// do nothing
 
   | TYPE ID affect
-  { //printf(" Type : %d !\n", $1);
-    struct symbol* new_id = affectation($1,$2,$3.result, $3.code,1);
-    quad_add(&code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
-    int tested = 2.5 + 2.5;
-    printf("test : %d\n ", tested);
+  { // printf(" Type : %d !\n", $1);
+    struct symbol* new_id = affectation($1,$2,$3.result, &$$.code, $3.code,1);
+    quad_add(&$$.code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
   }
   | TYPE ID indice affect
   {
@@ -98,8 +171,8 @@ stmnt:
                       ,filename, line, column);
         exit_status = FAIL;
       }
-      struct symbol* new_id = affectation($1,$2,$4.result, $4.code,1);
-      quad_add(&code, quad_gen(eq, $4.result,NULL, new_id));
+      struct symbol* new_id = affectation($1,$2,$4.result, &$$.code, $4.code,1);
+      quad_add(&$$.code, quad_gen(eq, $4.result,NULL, new_id));
     }
 
     tmp_arr_index = 0;
@@ -117,13 +190,14 @@ stmnt:
   }
   | ID affect
   {
-    if (affectation(0,$1,$2.result, $2.code,0) == NULL) { // arg char* type is not needed
+    if (affectation(0,$1,$2.result, &$$.code, $2.code,0) == NULL) { // arg char* type is not needed
           column-=strlen($1)+3;
           fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",
                   filename, line, column, $1);
           exit_status = FAIL;
           return 1;
     }
+    // printf("affectation ok \n");
   }
   | E INCRorDECR	';'
   { //printf("expr -> expr++\n");

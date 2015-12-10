@@ -73,13 +73,13 @@ condition:
     expr '>' expr // remplacer '>' par bool_op
       {
         printf("cond -> expr > expr\n");
+        quad_add(&$$.code, goto_false);
                                         // remplacer char par enum bool_op
         struct quad* goto_true   = quad_gen(next_quad++, '>', $1.result, $3.result, NULL); // res null -> trou
         struct quad* goto_false  = quad_gen(next_quad++, 'G', NULL, NULL, NULL);
         $$.code = $1.code;
         quad_add(&$$.code, $3.code);
         quad_add(&$$.code, goto_true);
-        quad_add(&$$.code, goto_false);
         $$.truelist   = quad_list_new(goto_true);
         $$.falselist  = quad_list_new(goto_false);
       }

@@ -5,7 +5,7 @@ enum Op{
 	eq, add, sub, mult, divi, 		// binary op
 	neg, incr, decr, 							// unary op
 	seq, sne, sgt, slt, sge, sle, // rel op
-	not, and, or,									// bool op
+	not, and, or,	Goto,	label,		// bool op
 	prnt, prntf, prntm						// print op
 } Op;
 
