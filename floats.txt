@@ -5,7 +5,7 @@ int main() {
         float c = 5.;
         float d = 1;
         float e = 1.4E10;
-        float f = .4e-4;
+        float f = 4e-2;
         float g = 6.e13;
         float h = 7.E-14;
 
