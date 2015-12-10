@@ -87,7 +87,7 @@ block:
     else $$.code = $2.code;
     code = $$.code;
   }
-  | IF condition '{' block ELSE '{' block block
+  | IF '(' condition ')' '{' block ELSE '{' block block
   {
     struct quad*   jump;
     struct quad* label_true;  // equivaut a tag dans "if then tag stmnt else tagoto stmnt next"
@@ -97,24 +97,24 @@ block:
     // if($7.code == NULL) printf("nothing in the else block ! \n");
 
     // label of the 1st stmnt
-    label_true  = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $4.code->label));
+    label_true  = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $6.code->label));
     // goto after 2nd stmnt : jump after stmnt false
-    next        = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $8.code->label));
+    next        = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $10.code->label));
     jump        = quad_gen(Goto, NULL, NULL, next->res);
     // label of the 2nd stmnt
-    label_false = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $7.code->label));
+    label_false = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $9.code->label));
 
-    quad_list_complete($2.truelist, label_true->res);  // backpatching truelist with label_true
-    quad_list_complete($2.falselist, label_false->res); // backpatching falselist with label_false
+    quad_list_complete($3.truelist, label_true->res);  // backpatching truelist with label_true
+    quad_list_complete($3.falselist, label_false->res); // backpatching falselist with label_false
 
-    $$.code = $2.code;              // condition code
+    $$.code = $3.code;              // condition code
     quad_add(&$$.code, label_true); // label for true
-    quad_add(&$$.code, $4.code);    // stmnt for true
+    quad_add(&$$.code, $6.code);    // stmnt for true
     quad_add(&$$.code, jump);       // jump after stmnt false if true
     quad_add(&$$.code, label_false);// label for false
-    quad_add(&$$.code, $7.code);    // stmnt for false
+    quad_add(&$$.code, $9.code);    // stmnt for false
     quad_add(&$$.code, next);       // label after stmnt false
-    quad_add(&$$.code, $8.code);    // the rest of the code
+    quad_add(&$$.code, $10.code);    // the rest of the code
   }
   | '}' {$$.code = NULL;}
   ;
