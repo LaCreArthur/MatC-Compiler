@@ -15,9 +15,6 @@ extern int column;  // the column in the line, for error debugging
 char* filename;     // the exec prg name
 FILE* out; 					// the output file stream
 
-// perfome the calcule of arg1 op arg2
-float op_calc(int op, struct symbol* arg1, struct symbol* arg2);
-
 // add a temp expression
 void temp_add(struct symbol** result);
 
@@ -26,11 +23,15 @@ void expr_add(int op, struct symbol** res_result, struct quad** res_code,
 											 struct symbol* arg1_result, struct quad* arg1_code,
 											 struct symbol* arg2_result, struct quad* arg2_code);
 
+// affect a value to an id by creating a temp symbole that contain the value and a quad "id = temp"
+struct symbol* affectation(int type, char* id, struct symbol* res, struct quad** code, struct quad* q, int declare);
+// perfome the calcule of arg1 op arg2
+float op_calc(int op, struct symbol* arg1, struct symbol* arg2);
+
 // print an ending message
 void exit_msg(int status);
 
-// affect a value to an id by creating a temp symbole that contain the value and a quad "id = temp"
-struct symbol* affectation(int type, char* id, struct symbol* res, struct quad** code, struct quad* q, int declare);
 
+char* safeId(char* id);
 
 #endif

@@ -109,11 +109,11 @@ char* symbol_typeToStr (enum Type type){
 
 void symbol_printVal(struct symbol* s){
   switch (s->type) {
-    case t_int:   { printf("%d\n", (int)s->value);   break;}
-    case t_float: { printf("%.2f\n", s->value);      break;}
+    case t_int:   { printf("%d\n", (int)s->value);     break;}
+    case t_float: { printf("%.2f\n", s->value);        break;}
     case t_arr:   { array_print(s->arr->values,stdout);break;}
     case t_mat:   { array_print(s->arr->values,stdout);break;}
-    case t_bool:  { printf("%d\n", (int)s->value);   break;}
+    case t_bool:  { printf("%d\n", (int)s->value);     break;}
     default: {break;}
   }
 }

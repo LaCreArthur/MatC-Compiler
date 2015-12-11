@@ -6,8 +6,8 @@ int main() {
 	else {
 		a = 0;
 	}
-	float fb = 2.5;
-	if (a <= fb || a != 2){
+	float b = 2.5;
+	if (a <= b || a != 2){
 		a = a+1;
 	}
 	else {

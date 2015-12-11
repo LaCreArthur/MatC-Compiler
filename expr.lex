@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "y.tab.h"
+#include "expr.h"
 #define column_incr column+=strlen(yytext)
 int DEBUG = 0;
 int line = 1;
@@ -54,7 +55,7 @@ noaplha				[\'\"\{\};,]
 {float}+({exp})?	{ yylval.float_value=atof(yytext); column_incr; return(FLOAT); }
 {float}*({exp})?  { yylval.float_value=atof(yytext); column_incr; return(FLOAT); }
 {id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); column_incr;
-								yylval.str_value = strdup(yytext); return ID;}
+								yylval.str_value = isValideId(strdup(yytext)); return ID;}
 
 {index}				{ if(DEBUG) printf(" ix_"); printf("%s", yytext); yylval.int_value = atoi(yytext+1); column_incr; return(INDEX);}
 "++"|"--"			{ printf("%s", yytext); yylval.str_value = yytext; column_incr; return INCRorDECR;}

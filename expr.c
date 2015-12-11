@@ -84,3 +84,12 @@ void exit_msg(int status){
   }
 
 }
+
+char* safeId(char* id){
+  size_t len = strlen(id);
+  char *newid = malloc(len + 1 + 1 ); /* one for extra char, one for trailing zero */
+  strcpy(newid, id);
+  newid[len] = '_';
+  newid[len + 1] = '\0';
+  return newid;
+}
