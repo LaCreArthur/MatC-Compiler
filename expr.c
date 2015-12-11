@@ -32,18 +32,18 @@ struct symbol* affectation(int type, char* id, struct symbol* res, struct quad**
   struct symbol* new_id; // declare the possible new id
   if((new_id = symbol_find(tds, id)) != NULL){ // new id already existe
     if (declare) { // try to redeclare
-      fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage",filename, line, id);
+      fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",filename, line, id);
       exit(EXIT_FAILURE);
     }
     else { // reaffectation
-      switch (new_id->type) { // copie the E value/array into the id value/array
-        case t_int:   { new_id->value = (int)res->value; break;}
-        case t_bool:  { new_id->value = (int)res->value; break;}
-        case t_float: { new_id->value = res->value;      break;}
-        case t_arr:   { new_id->arr = res->arr; break;}
-        case t_mat:   { new_id->arr = res->arr; break;}
-        default: {break;}
-      }
+      // switch (new_id->type) { // copie the E value/array into the id value/array
+      //   case t_int:   { new_id->value = (int)res->value; break;}
+      //   case t_bool:  { new_id->value = (int)res->value; break;}
+      //   case t_float: { new_id->value = res->value;      break;}
+      //   case t_arr:   { new_id->arr = res->arr; break;}
+      //   case t_mat:   { new_id->arr = res->arr; break;}
+      //   default: {break;}
+      // }
       quad_add(code, quad_gen(eq, res,NULL, new_id)); // store this affectation stmnt code
     }
   }

@@ -1,7 +1,0 @@
-int main() {
-	/*bonsoir*/
-	float a = 1.5 + 1 ;
-	int t = 2.8;
-	matrix m[2][2]={1.2,1.2,1.2,1.2};
-
-}

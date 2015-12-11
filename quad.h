@@ -2,11 +2,12 @@
 #define __QUAD__H__
 
 enum Op{
-	eq, add, sub, mult, divi, 		// binary op
-	neg, incr, decr, 							// unary op
-	seq, sne, sgt, slt, sge, sle, // rel op
-	not, and, or,	Goto,	label,		// bool op
-	prnt, prntf, prntm						// print op
+	eq, add, sub, mult, divi, // binary op
+	neg, incr, decr, 					// unary op
+	beq, bne, bgt, blt, 			// rel op
+	bge, ble, jump,	label, 		// rel op
+	not, and, or,							// bool op
+	prnt, prntf, prntm				// print op
 } Op;
 
 struct quad {
@@ -34,6 +35,10 @@ void quad_print  (struct quad* list);
 void quad_free   (struct quad* list);
 // transforme quads into mips instructions
 void quad_toMips (struct quad* list, FILE* out);
+// write relop operations in mips
+void quad_toMips_relop (struct quad* q, FILE* out);
+// write int or float operations in mips
+void quad_toMips_intOrFloat (struct quad* q, FILE* out);
 // get str from enum
 char* quad_opToStr(enum Op op);
 

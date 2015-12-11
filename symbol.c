@@ -23,8 +23,11 @@ struct symbol* symbol_newtemp(struct symbol** tds) {
 
 struct symbol* symbol_newcst(struct symbol** tds, int val){
   char temp_name[32];
-  snprintf(temp_name, 32, "%d", val);
-  return symbol_add(*tds, temp_name);
+  snprintf(temp_name, 32, "cst_%d", val);
+  struct symbol* res = symbol_add(*tds, temp_name);
+  res->value = val;
+  return res;
+
 }
 
 struct symbol* symbol_add (struct symbol* symb, char* id) {
@@ -87,7 +90,7 @@ void tds_toMips (struct symbol* list, FILE* out){ // only work for int and float
     }
     list = list->next;
 	}
-  fprintf(out,"end_msg:\t.ascii \"\\nexit status:\" \n");
+  fprintf(out,"end_msg:\t.ascii \"\\nexit status:\"\n");
   fprintf(out,"newline:\t.ascii \"\\n\" \n");
   fprintf(out,"\n#end of data seg\n");
 }

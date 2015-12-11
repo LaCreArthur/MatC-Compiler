@@ -40,15 +40,15 @@ noaplha				[\'\"\{\};,]
 "printmat"		{	printf("%s", yytext); column_incr; return PRINTM;}
 "if"					{	printf("%s", yytext); column_incr; return IF;}
 "else"				{	printf("%s", yytext); column_incr; return ELSE;}
-"=="					{	printf("%s", yytext); column_incr; yylval.int_value = 9;  return RELOP;} /* 9 : int code for the enum */
-"!="					{	printf("%s", yytext); column_incr; yylval.int_value = 10; return RELOP;}
-">"						{	printf("%s", yytext); column_incr; yylval.int_value = 11; return RELOP;}
-"<"						{	printf("%s", yytext); column_incr; yylval.int_value = 12; return RELOP;}
-">="					{	printf("%s", yytext); column_incr; yylval.int_value = 13; return RELOP;}
-"<="					{	printf("%s", yytext); column_incr; yylval.int_value = 14; return RELOP;}
-"!"						{	printf("%s", yytext); column_incr; yylval.int_value = 15; return NOT;}
-"&&"					{	printf("%s", yytext); column_incr; yylval.int_value = 16; return AND;}
-"||"					{	printf("%s", yytext); column_incr; yylval.int_value = 17; return OR;}
+"=="					{	printf("%s", yytext); column_incr; yylval.int_value = 8;  return RELOP;} /* 9 : int code for the enum */
+"!="					{	printf("%s", yytext); column_incr; yylval.int_value = 9; return RELOP;}
+">"						{	printf("%s", yytext); column_incr; yylval.int_value = 10; return RELOP;}
+"<"						{	printf("%s", yytext); column_incr; yylval.int_value = 11; return RELOP;}
+">="					{	printf("%s", yytext); column_incr; yylval.int_value = 12; return RELOP;}
+"<="					{	printf("%s", yytext); column_incr; yylval.int_value = 13; return RELOP;}
+"!"						{	printf("%s", yytext); column_incr; yylval.int_value = 14; return NOT;}
+"&&"					{	printf("%s", yytext); column_incr; yylval.int_value = 15; return AND;}
+"||"					{	printf("%s", yytext); column_incr; yylval.int_value = 16; return OR;}
 
 {int}					{ yylval.int_value = atoi(yytext); column_incr; return(INT);}
 {float}+({exp})?	{ yylval.float_value=atof(yytext); column_incr; return(FLOAT); }

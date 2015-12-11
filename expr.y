@@ -79,7 +79,6 @@ block:
    {
     if($1.code != NULL) {
       $$.code = $1.code;
-      printf("(a stmnt code is stored)\n");
       if($2.code != NULL) {
         quad_add(&$$.code, $2.code);
       }
@@ -89,20 +88,20 @@ block:
   }
   | IF '(' condition ')' '{' block ELSE '{' block block
   {
-    struct quad*   jump;
+    struct quad*   q_jump;
     struct quad* label_true;  // equivaut a tag dans "if then tag stmnt else tagoto stmnt next"
     struct quad* label_false; // equivaut a tagoto
-    struct quad* next;        // next block label
+    struct quad* label_next;        // next block label
     // if($4.code == NULL) printf("nothing in the if block ! \n");
     // if($7.code == NULL) printf("nothing in the else block ! \n");
 
     // label of the 1st stmnt
-    label_true  = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $6.code->label));
+    label_true    = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $6.code->label));
     // goto after 2nd stmnt : jump after stmnt false
-    next        = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $10.code->label));
-    jump        = quad_gen(Goto, NULL, NULL, next->res);
+    label_next    = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $10.code->label));
+    q_jump        = quad_gen(jump, NULL, NULL, label_next->res);
     // label of the 2nd stmnt
-    label_false = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $9.code->label));
+    label_false   = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $9.code->label));
 
     quad_list_complete($3.truelist, label_true->res);  // backpatching truelist with label_true
     quad_list_complete($3.falselist, label_false->res); // backpatching falselist with label_false
@@ -110,10 +109,10 @@ block:
     $$.code = $3.code;              // condition code
     quad_add(&$$.code, label_true); // label for true
     quad_add(&$$.code, $6.code);    // stmnt for true
-    quad_add(&$$.code, jump);       // jump after stmnt false if true
+    quad_add(&$$.code, q_jump);       // jump after stmnt false if true
     quad_add(&$$.code, label_false);// label for false
     quad_add(&$$.code, $9.code);    // stmnt for false
-    quad_add(&$$.code, next);       // label after stmnt false
+    quad_add(&$$.code, label_next);       // label after stmnt false
     quad_add(&$$.code, $10.code);    // the rest of the code
   }
   | '}' {$$.code = NULL;}
@@ -122,15 +121,27 @@ block:
 condition:
   E RELOP E
   {
-    printf("relop %d \n", RELOP);
-    struct quad* goto_true   = quad_gen(slt, $1.result, $3.result, NULL);
-    struct quad* goto_false  = quad_gen(Goto, NULL, NULL, NULL);
+    // printf("relop %d \n", $2);
+    struct quad* goto_true   = quad_gen($2, $1.result, $3.result, NULL);
+    struct quad* goto_false  = quad_gen(jump, NULL, NULL, NULL);
     $$.code = $1.code;
     quad_add(&$$.code, $3.code);
     quad_add(&$$.code, goto_true);
     quad_add(&$$.code, goto_false);
     $$.truelist   = quad_list_new(goto_true);
     $$.falselist  = quad_list_new(goto_false);
+  }
+  | '(' condition ')'
+  {
+    $$.truelist = $2.truelist;
+    $$.falselist = $2.falselist;
+    $$.code = $2.code;
+  }
+  | NOT condition
+  {
+    $$.truelist = $2.falselist;
+    $$.falselist = $2.truelist;
+    $$.code = $2.code;
   }
   | condition OR condition
   {
@@ -144,7 +155,21 @@ condition:
     quad_add(&$$.code, $3.code);     // second cond
     $$.falselist = $3.falselist;
     $$.truelist = $1.truelist;
-    quad_list_add(&$$.truelist, $3.truelist);
+    quad_list_add(&$$.truelist, $3.truelist); // first or second cond true same jump
+  }
+  | condition AND condition
+  {
+    printf("cond -> expr AND expr\n");
+    struct quad* label_true  =
+      quad_gen(label, NULL, NULL, symbol_newcst(&tds, $3.truelist->node->label));
+
+    quad_list_complete($1.truelist, label_true->res);
+    $$.code = $1.code;               // first condition
+    quad_add(&$$.code, label_true);  // if first is true goto second
+    quad_add(&$$.code, $3.code);     // second cond
+    $$.falselist = $1.falselist;
+    $$.truelist = $3.truelist;
+    quad_list_add(&$$.falselist, $3.falselist); // first or second cond false same jump
   }
   ;
 
@@ -160,14 +185,14 @@ stmnt:
   {
     if($1 == t_int || $1 == t_bool){ // wrong array type
       fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of "
-                     "type '%s'",filename, line, column, symbol_typeToStr($1));
+                     "type '%s'\n",filename, line, column, symbol_typeToStr($1));
       exit_status = FAIL;
     }
     else {
       // array_print(tmp_arr, stdout);
       if(tmp_arr_index > $4.result->arr->size){
         // declare too many values inside the "{}"
-        fprintf(stderr,"%s:%d:%d: error: excess elements in array initializer"
+        fprintf(stderr,"%s:%d:%d: error: excess elements in array initializer\n"
                       ,filename, line, column);
         exit_status = FAIL;
       }
@@ -192,7 +217,7 @@ stmnt:
   {
     if (affectation(0,$1,$2.result, &$$.code, $2.code,0) == NULL) { // arg char* type is not needed
           column-=strlen($1)+3;
-          fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",
+          fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
                   filename, line, column, $1);
           exit_status = FAIL;
           return 1;
@@ -216,11 +241,11 @@ stmnt:
     struct symbol* id;
     if ((id = symbol_find(tds,$3)) != NULL) {
       // printf("___found !");
-      quad_add(&code,quad_gen(prnt,NULL,NULL,id));
+      quad_add(&$$.code,quad_gen(prnt,NULL,NULL,id));
     }
     else {
       column-=strlen($3)+3;
-      fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)",
+      fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
               filename, line, column, $3);
       exit_status = FAIL;
       return 1;
@@ -426,7 +451,8 @@ int main(int argc, char *argv[]){
   tds_toMips(tds,out);
   quad_toMips(code,out);
   fprintf(out,"exit:\n\tli $v0 4\n\tla $a0, end_msg\n\tsyscall"); // print end_msg
-  fprintf(out,"\n\tli $a0 1\n\tli $v0 1\n\tsyscall\n\tj $ra"); // end of asm code
+  fprintf(out,"\n\tli $a0 1\n\tli $v0 1\n\tsyscall\n"); // end of asm code
+  fprintf(out, "\tli $v0 4\n\tla $a0, newline\n\tsyscall\n\tj $ra"); // print a newline
 
   quad_free(code);
   symbol_free(tds);
