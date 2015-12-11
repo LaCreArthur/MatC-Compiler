@@ -6,6 +6,12 @@ int main() {
 	else {
 		a = 0;
 	}
+	float fb = 2.5;
+	if (a <= fb || a != 2){
+		a = a+1;
+	}
+	else {
+		a = 0;
+	}
 	print(a);
-
 }

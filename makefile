@@ -15,4 +15,4 @@ debug : $(FILE).y $(FILE).lex $(CFILES)
 	gcc $(CFLAGS) *.c $(LIBS) $(DEBUG)
 
 clean :
-	rm y.tab.* lex.yy.c a.out
+	rm y.tab.* lex.yy.c a.out *.asm
