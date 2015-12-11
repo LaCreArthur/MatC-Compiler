@@ -13,5 +13,13 @@ int main() {
 	else {
 		a = 0;
 	}
+	if(a==3){
+		print(a);
+	}
+	while (a>0){
+		print(a);
+		a = a-1;
+	}
 	print(a);
+	print(b);
 }

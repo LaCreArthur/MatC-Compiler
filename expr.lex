@@ -41,6 +41,7 @@ noaplha				[\'\"\{\};,]
 "printmat"		{	printf("%s", yytext); column_incr; return PRINTM;}
 "if"					{	printf("%s", yytext); column_incr; return IF;}
 "else"				{	printf("%s", yytext); column_incr; return ELSE;}
+"while"				{	printf("%s", yytext); column_incr; return WHILE;}
 "=="					{	printf("%s", yytext); column_incr; yylval.int_value = 8;  return RELOP;} /* 9 : int code for the enum */
 "!="					{	printf("%s", yytext); column_incr; yylval.int_value = 9; return RELOP;}
 ">"						{	printf("%s", yytext); column_incr; yylval.int_value = 10; return RELOP;}
@@ -55,7 +56,7 @@ noaplha				[\'\"\{\};,]
 {float}+({exp})?	{ yylval.float_value=atof(yytext); column_incr; return(FLOAT); }
 {float}*({exp})?  { yylval.float_value=atof(yytext); column_incr; return(FLOAT); }
 {id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); column_incr;
-								yylval.str_value = isValideId(strdup(yytext)); return ID;}
+								yylval.str_value = safeId(strdup(yytext)); return ID;}
 
 {index}				{ if(DEBUG) printf(" ix_"); printf("%s", yytext); yylval.int_value = atoi(yytext+1); column_incr; return(INDEX);}
 "++"|"--"			{ printf("%s", yytext); yylval.str_value = yytext; column_incr; return INCRorDECR;}

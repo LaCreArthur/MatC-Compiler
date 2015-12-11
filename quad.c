@@ -128,14 +128,15 @@ void quad_toMips_intOrFloat (struct quad* q, FILE* out){
 	}
 	switch (q->op) {
 		case prnt: {
-			if (q->res->type == t_int) {
-				fprintf(out, "#print int\n\t");
-				fprintf(out,"mfc1 $t0, $f0\n\tmove $a0, $t0\n\tli $v0, 1\n\tsyscall\n");
-			}
-			else fprintf(out,"li $v0, 2\n\tmov.s $f12, $f0\n\tsyscall\n");
-			fprintf(out, "\tli $v0 4\n\tla $a0, newline\n\tsyscall\n"); return;}
-		case add: { fprintf(out, "\t#addition      \n\tadd.s $f0, $f1, $f2\n"); break;}
-		case sub: { fprintf(out, "\t#substraction  \n\tsub.s $f0, $f1, $f2\n"); break;}
+				if(q->res->type == t_int) {
+					fprintf(out, "#print int\n\t");
+					fprintf(out,"mfc1 $t0, $f0\n\tmove $a0, $t0\n\tli $v0, 1\n\tsyscall\n");
+				} else{
+					fprintf(out, "#print float\n\t");
+					fprintf(out,"mov.s $f12, $f0\n\tli $v0, 2\n\tsyscall\n");
+				} fprintf(out, "\tli $v0 4\n\tla $a0, newline\n\tsyscall\n"); return;}
+		case add:  {fprintf(out, "\t#addition      \n\tadd.s $f0, $f1, $f2\n"); break;}
+		case sub:  {fprintf(out, "\t#substraction  \n\tsub.s $f0, $f1, $f2\n"); break;}
 		case mult: {fprintf(out, "\t#multiplication\n\tmul.s $f0, $f1, $f2\n"); break;}
 		case divi: {fprintf(out, "\t#division      \n\tdiv.s $f0, $f1, $f2\n"); break;}
 		case eq: {

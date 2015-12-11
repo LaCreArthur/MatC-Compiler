@@ -48,7 +48,7 @@
 %token <int_value> RELOP NOT AND OR
 %token <float_value> FLOAT
 %token <str_value> ID INCRorDECR STR
-%token MAIN PRINT PRINTF PRINTM IF ELSE
+%token MAIN PRINT PRINTF PRINTM IF ELSE WHILE
 %token '+' '-' '*' '/'
 %token '(' ')'
 %token END
@@ -86,22 +86,64 @@ block:
     else $$.code = $2.code;
     code = $$.code;
   }
+  | WHILE '(' condition ')' '{' block block
+  {
+    struct quad* jump_loop;
+    struct quad* label_loop;
+    struct quad* label_true; // equivaut a tag dans "if cond tag stmnt next"
+    struct quad* label_next; // next block label
+
+    label_loop = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $3.code->label));
+    jump_loop       = quad_gen(jump, NULL, NULL, label_loop->res);
+    label_true = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $6.code->label));
+    label_next = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $7.code->label));
+
+    quad_list_complete($3.truelist, label_true->res);  // backpatching truelist with label_true
+    quad_list_complete($3.falselist, label_next->res); // backpatching falselist with label_false
+
+    $$.code = label_loop;           // label before condition
+    quad_add(&$$.code, $3.code);    // condition code
+    quad_add(&$$.code, label_true); // label for true
+    quad_add(&$$.code, $6.code);    // stmnt for true
+    quad_add(&$$.code, jump_loop);  // jump before condition
+    quad_add(&$$.code, label_next); // label after stmnt true
+    quad_add(&$$.code, $7.code);    // the rest of the code
+  }
+  | IF '(' condition ')' '{' block block
+  {
+    struct quad* label_true;  // equivaut a tag dans "if cond tag stmnt next"
+    struct quad* label_next;  // next block label
+
+    // label of the stmnt
+    label_true = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $6.code->label));
+    // goto after stmnt
+    label_next = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $7.code->label));
+
+    quad_list_complete($3.truelist, label_true->res);  // backpatching truelist with label_true
+    quad_list_complete($3.falselist, label_next->res); // backpatching falselist with label_false
+
+    $$.code = $3.code;              // condition code
+    quad_add(&$$.code, label_true); // label for true
+    quad_add(&$$.code, $6.code);    // stmnt for true
+    quad_add(&$$.code, label_next); // label after stmnt true
+    quad_add(&$$.code, $7.code);    // the rest of the code
+  }
   | IF '(' condition ')' '{' block ELSE '{' block block
   {
     struct quad*   q_jump;
-    struct quad* label_true;  // equivaut a tag dans "if then tag stmnt else tagoto stmnt next"
+    struct quad* label_true;  // equivaut a tag dans "if cond tag stmnt else tagoto stmnt next"
     struct quad* label_false; // equivaut a tagoto
-    struct quad* label_next;        // next block label
+    struct quad* label_next;  // next block label
     // if($4.code == NULL) printf("nothing in the if block ! \n");
     // if($7.code == NULL) printf("nothing in the else block ! \n");
 
     // label of the 1st stmnt
-    label_true    = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $6.code->label));
+    label_true  = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $6.code->label));
     // goto after 2nd stmnt : jump after stmnt false
-    label_next    = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $10.code->label));
-    q_jump        = quad_gen(jump, NULL, NULL, label_next->res);
+    label_next  = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $10.code->label));
+    q_jump      = quad_gen(jump, NULL, NULL, label_next->res);
     // label of the 2nd stmnt
-    label_false   = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $9.code->label));
+    label_false = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $9.code->label));
 
     quad_list_complete($3.truelist, label_true->res);  // backpatching truelist with label_true
     quad_list_complete($3.falselist, label_false->res); // backpatching falselist with label_false
@@ -109,11 +151,11 @@ block:
     $$.code = $3.code;              // condition code
     quad_add(&$$.code, label_true); // label for true
     quad_add(&$$.code, $6.code);    // stmnt for true
-    quad_add(&$$.code, q_jump);       // jump after stmnt false if true
+    quad_add(&$$.code, q_jump);     // jump after stmnt false if true
     quad_add(&$$.code, label_false);// label for false
     quad_add(&$$.code, $9.code);    // stmnt for false
-    quad_add(&$$.code, label_next);       // label after stmnt false
-    quad_add(&$$.code, $10.code);    // the rest of the code
+    quad_add(&$$.code, label_next); // label after stmnt false
+    quad_add(&$$.code, $10.code);   // the rest of the code
   }
   | '}' {$$.code = NULL;}
   ;
