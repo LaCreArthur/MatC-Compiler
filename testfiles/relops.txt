@@ -1,17 +1,11 @@
 int main() {
-	/* int operation and print test*/
-	int test = 1;
-	print(test);
-	test = test + 1;
-	print(test);
-	test = test + 1.5;
-	print(test);
+	int a = 1;
+	if (a > 0 && a == 1) {
+		a = a+1;
+	}
+	else {
+		a = 0;
+	}
+	print(a);
 
-	/* float */
-	float test2 = 1.;
-	print(test2);
-	test2 = test2 + 1;
-	print(test2);
-	test2 = test2 + 1.5;
-	print(test2);
 }
