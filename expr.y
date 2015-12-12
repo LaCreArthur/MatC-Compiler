@@ -12,7 +12,6 @@
   #include "expr.h"
   #include "testmatrix.h"
 
-  int exit_status = SUCCESS;
   int yylex();
   int yyerror();
   float tmp_arr[100] = { [0 ... 99] = INFINITY};
@@ -76,7 +75,7 @@ main:
 
 block:
    stmnt block
-   {
+  {
     if($1.code != NULL) {
       $$.code = $1.code;
       if($2.code != NULL) {
@@ -220,7 +219,12 @@ stmnt:
 
   | TYPE ID affect
   { // printf(" Type : %d !\n", $1);
-    struct symbol* new_id = affectation($1,$2,$3.result, &$$.code, $3.code,1);
+    struct symbol* new_id;
+    if ( (new_id = affectation($1,$2,$3.result, &$$.code, $3.code,1)) == NULL) {
+      fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",filename, line, $2);
+      exit_status = FAIL;
+      YYABORT;
+    }
     quad_add(&$$.code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
   }
   | TYPE ID indice affect
@@ -238,7 +242,13 @@ stmnt:
                       ,filename, line, column);
         exit_status = FAIL;
       }
-      struct symbol* new_id = affectation($1,$2,$4.result, &$$.code, $4.code,1);
+      struct symbol* new_id;
+      if ( (new_id = affectation($1,$2,$4.result, &$$.code, $4.code,1)) == NULL) {
+        fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",filename, line, $2);
+        exit_status = FAIL;
+        YYABORT;
+
+      }
       quad_add(&$$.code, quad_gen(eq, $4.result,NULL, new_id));
     }
 
@@ -290,7 +300,7 @@ stmnt:
       fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
               filename, line, column, $3);
       exit_status = FAIL;
-      return 1;
+      YYABORT;
     }
   }
   | PRINTF '(' STR ')' ';'
@@ -308,7 +318,7 @@ affect:
   { $$.result = NULL; $$.code = NULL;} // not tested
   | '=' E ';'
   { $$ = $2;}
-  | '=' '{' values '}' ';'
+  | '=' '{' brackets '}' ';'
   {
     temp_add(&$$.result);
     $$.code = NULL;
@@ -321,21 +331,30 @@ affect:
   ;
 
 
+brackets:
+    values
+  {
+  }
+  | '{' values '}' ',' '{' brackets '}'
+  {
+  }
+  ;
+
 values:
     FLOAT
   {
-    if ($$ == NULL) {
-      printf("$$ is null");
-    }
-    tmp_arr[tmp_arr_index] = $1;
-    tmp_arr_index++;
-    printf("%.2f",$1);
+  if ($$ == NULL) {
+    printf("$$ is null");
+  }
+  tmp_arr[tmp_arr_index] = $1;
+  tmp_arr_index++;
+  printf("%.2f",$1);
   }
   | values ',' FLOAT
   {
-    tmp_arr[tmp_arr_index] = $3;
-    tmp_arr_index++;
-    printf("%.2f",$3);
+  tmp_arr[tmp_arr_index] = $3;
+  tmp_arr_index++;
+  printf("%.2f",$3);
   }
   ;
 
@@ -353,20 +372,8 @@ values:
     ;
 
 E:
-  //   E "or" E                      {
-  //
-  //                                 }
-  // | E "and" E                     {
-  //
-  //                                 }
-  // | E RELOP E                     {
-  //
-  //                                 }
-  // | "not" E                       {
-  //
-  //                                 }
-   E '+' E
-   { //printf("expr -> expr + expr\n");
+  E '+' E
+  { //printf("expr -> expr + expr\n");
     expr_add(add, &$$.result, &$$.code,
                    $1.result, $1.code,
                    $3.result, $3.code);
@@ -478,11 +485,10 @@ int main(int argc, char *argv[]){
   if ((out = fopen(asm_file,"w")) == NULL) {
     perror("fopen test.asm :");
   }
-
+  exit_status = SUCCESS;
   /////////////////////////////
   yyparse();
   /////////////////////////////
-  printf("\n");
   exit_msg (exit_status);
 
   printf("\ntable :\n");

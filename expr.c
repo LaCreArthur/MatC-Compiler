@@ -32,8 +32,7 @@ struct symbol* affectation(int type, char* id, struct symbol* res, struct quad**
   struct symbol* new_id; // declare the possible new id
   if((new_id = symbol_find(tds, id)) != NULL){ // new id already existe
     if (declare) { // try to redeclare
-      fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",filename, line, id);
-      exit(EXIT_FAILURE);
+      return NULL;
     }
     else { // reaffectation
       quad_add(code, quad_gen(eq, res,NULL, new_id)); // store this affectation stmnt code
@@ -82,7 +81,6 @@ void exit_msg(int status){
     fprintf(stderr,"%*c %s\n",column+5,' ',"^");
     exit(EXIT_FAILURE);
   }
-
 }
 
 char* safeId(char* id){
