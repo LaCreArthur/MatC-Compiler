@@ -91,3 +91,11 @@ char* safeId(char* id){
   newid[len + 1] = '\0';
   return newid;
 }
+
+/* error handling */
+
+void error_undeclared(char *filename, int line, int column, char *id) {
+      fprintf(stderr,
+              "%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
+              filename, line, column, id);
+}

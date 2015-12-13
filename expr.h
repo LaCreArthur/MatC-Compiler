@@ -34,4 +34,8 @@ void exit_msg(int status);
 
 char* safeId(char* id);
 
+/* error handling */
+void error_undeclared(char *filename, int line, int column, char *id);
+
+
 #endif
