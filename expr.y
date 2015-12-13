@@ -483,7 +483,8 @@ int main(int argc, char *argv[]){
   strncpy(asm_file,filename,sizeof(filename)-1);
   strncat(asm_file,".asm",4);
   if ((out = fopen(asm_file,"w")) == NULL) {
-    perror("fopen test.asm :");
+    perror("failed to open `asm_file`:");
+    printf("asm_file: %s\n", asm_file);
   }
   exit_status = SUCCESS;
   /////////////////////////////
