@@ -4,6 +4,11 @@
 #include "symbol.h"
 #include "quad.h"
 
+#define mips_l(line, ...) fprintf(out, "\t" line "\n", ##__VA_ARGS__)
+#define mips_label(label, ...) fprintf(out, label ":\n", ##__VA_ARGS__)
+#define mips_comment(line, ...) fprintf(out, line "\n", ##__VA_ARGS__)
+
+
 struct quad* quad_gen(int op,struct symbol* arg1,struct symbol* arg2,struct symbol* res){
 	static int current_label = 1;
 	struct quad* new = malloc(sizeof(*new));
