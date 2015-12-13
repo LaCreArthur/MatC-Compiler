@@ -84,16 +84,27 @@ void quad_toMips (struct quad* list, FILE* out){
 	while (list != NULL) {
 		if(list->res != NULL) {
 			switch (list->res->type) {
-				case t_int: { quad_toMips_intOrFloat(list, out); break;}
-				case t_float: { quad_toMips_intOrFloat(list, out); break;}
-				default: { fprintf(stderr, "quad_toMips : missing case : type %s\n",
-										symbol_typeToStr(list->res->type)); break;}
+			case t_int:
+				quad_toMips_intOrFloat(list, out);
+				break;
+
+			case t_float:
+				quad_toMips_intOrFloat(list, out);
+				break;
+
+			case t_arr:
+				quad_toMips_array(list, out);
+				break;
+
+			default:
+				fprintf(stderr, "quad_toMips : missing case : type %s\n",
+						symbol_typeToStr(list->res->type));
+				break;
 			}
 			list = list->next;
 		}
 	}
 }
-
 
 void quad_toMips_relop (struct quad* q, FILE* out){
 	fprintf(out, "#relop branch and jump\n");
@@ -152,6 +163,48 @@ void quad_toMips_intOrFloat (struct quad* q, FILE* out){
 		default: {fprintf(stderr, "quad_toMips_float: unknow op %s\n", quad_opToStr(q->op));break;}
 	}
 	fprintf(out, "\ts.s $f0, %s\n",q->res->id); // store the new res into the res data seg
+}
+
+
+void quad_toMips_array (struct quad* q, FILE* out) {
+	fprintf(out,"#load\n\tla $a1, %s\n", q->res->id);
+
+	switch (q->op) {
+	case prnt:
+		// load array address into $a1
+		// missing: the index of the value
+		mips_l("\tl.s $f12 %d($a1)\n", 0);
+		mips_l("li $v0, 2"); // print float
+		mips_l("syscall");
+		break;
+	default:
+		mips_l("#unhandled op: %s", quad_opToStr(q->op));
+	}
+}
+
+void quad_toMips_matrix (struct quad* q, FILE* out) {
+	switch (q->op) {
+	case prnt:
+		mips_l("print array\n");
+		mips_l("li $t0, %d", q->res->arr->size); // load array size in t0
+		mips_l("li $t1 0\n"); // loop counter
+		mips_label("print_loop");
+		mips_l("l.s $f12 ($a1)"); // load array address into $a1
+		mips_l("li $v0, 2"); //
+		mips_l("syscall");
+
+		mips_l("la $a0, 32"); // print space
+		mips_l("li $v0, 11");
+		mips_l("syscall");
+
+		mips_l("addi $t1, $t1, 1"); // increment counter
+		mips_l("addi $a1, $a1, 4"); // move to next element in array
+		mips_l("blt $t1, $t0, print_loop"); // loop
+		break;
+	default:
+		break;
+	}
+
 }
 
 char* quad_opToStr(enum Op op){

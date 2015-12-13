@@ -39,6 +39,10 @@ void quad_toMips (struct quad* list, FILE* out);
 void quad_toMips_relop (struct quad* q, FILE* out);
 // write int or float operations in mips
 void quad_toMips_intOrFloat (struct quad* q, FILE* out);
+// write array operations in mips
+void quad_toMips_array (struct quad* q, FILE* out);
+// write matrix operations in mips
+void quad_toMips_matrix (struct quad* q, FILE* out);
 // get str from enum
 char* quad_opToStr(enum Op op);
 
