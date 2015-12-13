@@ -503,6 +503,8 @@ int main(int argc, char *argv[]){
   fprintf(out,"\n\tli $a0 1\n\tli $v0 1\n\tsyscall\n"); // end of asm code
   fprintf(out, "\tli $v0 4\n\tla $a0, newline\n\tsyscall\n\tj $ra"); // print a newline
 
+  printf("Assembler code successfully written to %s\n", asm_file);
+
   quad_free(code);
   symbol_free(tds);
 
