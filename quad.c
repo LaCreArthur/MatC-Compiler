@@ -185,7 +185,7 @@ void quad_toMips_array (struct quad* q, FILE* out) {
 void quad_toMips_matrix (struct quad* q, FILE* out) {
 	switch (q->op) {
 	case prnt:
-		mips_l("print array\n");
+		mips_comment("print array");
 		mips_l("li $t0, %d", q->res->arr->size); // load array size in t0
 		mips_l("li $t1 0\n"); // loop counter
 		mips_label("print_loop");
