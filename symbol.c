@@ -77,16 +77,29 @@ void symbol_free (struct symbol* list){
    }
 }
 
-void tds_toMips (struct symbol* list, FILE* out){ // only work for int and float by now
-  fprintf(out,"\t.data\n"); // init data segment
+/* only works for int, float, array for now */
+void tds_toMips (struct symbol* list, FILE* out) {
+	fprintf(out,"\t.data\n"); // init data segment
 	while (list != NULL) {
-    switch (list->type) {
-      case t_int:   { fprintf(out,"%s:\t.word %d\n",  list->id, (int)list->value); break;} // int vars, cast avoid warning
-      case t_float: { fprintf(out,"%s:\t.float %f\n", list->id, list->value);      break;} // declare statics float vars
-      case t_arr:   { fprintf(out,"%s:\t.float ",list->id); array_print(list->arr->values, out); break;}
-      case t_mat:   { break; }
-      case t_bool:  { break; }
-      default: {break;}
+		switch (list->type) {
+		case t_int:
+			// int vars, cast avoid warning
+			fprintf(out,"%s:\t.word %d\n",  list->id, (int)list->value);
+			break;
+		case t_float:
+			// declare statics float vars
+			fprintf(out,"%s:\t.float %f\n", list->id, list->value);
+			break;
+		case t_arr:
+			fprintf(out,"%s:\t.float ",list->id);
+			array_print(list->arr->values, out);
+			break;
+		case t_mat:
+			break;
+		case t_bool:
+			break;
+		default:
+			break;
     }
     list = list->next;
 	}
