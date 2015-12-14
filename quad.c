@@ -175,26 +175,33 @@ void quad_toMips_intOrFloat (struct quad* q, FILE* out){
 		return;
 		break;
 	case add:
-		fprintf(out, "\t#addition      \n\tadd.s $f0, $f1, $f2\n");
+		mips_comment("addition");
+		mips_l("add.s $f0, $f1, $f2");
 		break;
 
 	case sub:
-		fprintf(out, "\t#substraction  \n\tsub.s $f0, $f1, $f2\n");
+		mips_comment("subtraction");
+		mips_l("sub.s $f0, $f1, $f2");
 		break;
 
 	case mult:
-		fprintf(out, "\t#multiplication\n\tmul.s $f0, $f1, $f2\n");
+		mips_comment("multiplication");
+		mips_l("mul.s $f0, $f1, $f2");
 		break;
 
 	case divi:
-		fprintf(out, "\t#division      \n\tdiv.s $f0, $f1, $f2\n");
+		mips_comment("division");
+		mips_l("div.s $f0, $f1, $f2");
 		break;
 
 	case eq:
-		if (q->res->type == t_int)
+		if (q->res->type == t_int) {
 			// conversion float->int
-			fprintf(out, "\t#conversion \n\tcvt.w.s $f1, $f1\n");
-		fprintf(out, "\t#affectation   \n\tmov.s $f0, $f1\n");
+			mips_comment("conversion");
+			mips_l("cvt.w.s $f1, $f1");
+		}
+		mips_comment("affectation");
+		mips_l("mov.s $f0, $f1");
 		break;
 
 	default:
