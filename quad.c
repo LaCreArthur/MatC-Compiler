@@ -227,26 +227,26 @@ char* quad_opToStr(enum Op op){
 
 	case divi:
 		return "/";
-	break;
+		break;
 
 	case neg:
 		return "-";
 		break;
 
-	case incr
-		return "++"
+	case incr:
+		return "++";
 		break;
 
-	case decr
-		return "--"
+	case decr:
+		return "--";
 		break;
 
 	case beq:
-		return "=="
+		return "==";
 			break;
 
 	case bne:
-		return "!="
+		return "!=";
 			break;
 
 	case bgt:
@@ -278,7 +278,7 @@ char* quad_opToStr(enum Op op){
 		break;
 
 	case jump:
-		return "jump"
+		return "jump";
 		break;
 
 	case label:

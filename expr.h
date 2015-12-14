@@ -10,7 +10,7 @@ int exit_status;
 // ---
 struct symbol* tds; // the table of symbols
 struct quad* code;  // the intermediar code
-extern int line;    // the line which is parse, for error debugging
+extern int line;    // the line which is parsed, for error debugging
 extern int column;  // the column in the line, for error debugging
 char* filename;     // the exec prg name
 FILE* out; 					// the output file stream
