@@ -28,7 +28,22 @@
     for (int i=0; i<DIMS_MAX_SIZE; i++) {
       tmp_dims[i] = 0;
     }
-}
+  }
+
+  int compute_offset(array* arr) {
+	  // float a[m][n][o];
+	  // a [i][j][k] = 3.0;
+	  // offset = i*n + j*n + o;
+
+	  int offset = 0;
+	  int i;
+	  for (i=0; i < tmp_dims_index - 1; i++) {
+		  offset += tmp_dims[i] * arr->dims[i+1];
+	  }
+	  offset += tmp_dims[i];
+	  offset *= 4; // size of float
+	  return offset;
+  }
 
 %}
 
@@ -280,7 +295,6 @@ stmnt:
 
 	  // temp int for the offset
 	  struct symbol* sym_offset = symbol_alloc();
-	  int i;
 	  sym_offset = symbol_newtemp(&tds);
 	  sym_offset->type = t_int;
 
@@ -293,15 +307,8 @@ stmnt:
 
 	  /* compute the offset */
 
-	  // float a[m][n][o];
-	  // a [i][j][k] = 3.0;
-	  // offset = i*n + j*n + o;
 
-	  for (i=0; i < tmp_dims_index - 1; i++) {
-	  	  sym_offset->value += tmp_dims[i] * sym_arr->arr->dims[i+1];
-	  }
-	  sym_offset->value += tmp_dims[i];
-	  sym_offset->value *= 4; // size of float
+	  sym_offset->value = compute_offset(sym_arr->arr);
 	  quad_add(&$$.code, quad_gen(arr_aff, sym_offset, $3.result, sym_arr));
 
 	  tmp_arr_clear();
