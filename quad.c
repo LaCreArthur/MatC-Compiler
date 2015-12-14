@@ -44,7 +44,7 @@ void quad_print (struct quad* list){
 		printf("%d :\t", list->label);
 		if (list->op >= beq && list-> op <= ble) { // relop
 			printf("if %s %s %s goto label%s",
-			 	list->arg1->id, quad_opToStr(list->op), list->arg2->id, list->res->id);
+				list->arg1->id, quad_opToStr(list->op), list->arg2->id, list->res->id);
 		}
 		else if (list->op == label) {
 			printf("label %s:",list->res->id);
@@ -134,35 +134,74 @@ void quad_toMips_intOrFloat (struct quad* q, FILE* out){
 		quad_toMips_relop(q, out);
 		return;
 	}
-	fprintf(out,"#load\n\tl.s $f0, %s\n", q->res->id); // load res into $f0
+	mips_comment("load");
+	mips_l("l.s $f0, %s", q->res->id); // load res into $f0
 
-	if (q->arg1 != NULL) fprintf(out,"\tl.s $f1, %s\n", q->arg1->id); // load arg1 into $f1
-	if (q->arg2 != NULL) fprintf(out,"\tl.s $f2, %s\n", q->arg2->id); // load arg2 into $f2
-	if (q->op != prnt && q->op != eq) { // convert for prnt and eq cause non-predictible issues
-		if (q->arg1->type == t_int) fprintf(out,"\tcvt.s.w $f1, $f1\n"); // convert f1 to float for operation
-		if (q->arg2->type == t_int) fprintf(out,"\tcvt.s.w $f2, $f2\n"); // convert f2 to float for operation
+	if (q->arg1 != NULL)
+		// load arg1 into $f1
+		mips_l("l.s $f1, %s", q->arg1->id);
+
+	if (q->arg2 != NULL)
+		// load arg2 into $f2
+		mips_l("l.s $f2, %s", q->arg2->id);
+
+	// convert for prnt and eq cause non-predictible issues
+	if (q->op != prnt && q->op != eq) {
+		if (q->arg1->type == t_int)
+			// convert f1 to float for operation
+			mips_l("cvt.s.w $f1, $f1");
+
+		if (q->arg2->type == t_int)
+			// convert f2 to float for operation
+			mips_l("cvt.s.w $f2, $f2");
 	}
 	switch (q->op) {
-		case prnt: {
-				if(q->res->type == t_int) {
-					fprintf(out, "#print int\n\t");
-					fprintf(out,"mfc1 $t0, $f0\n\tmove $a0, $t0\n\tli $v0, 1\n\tsyscall\n");
-				} else{
-					fprintf(out, "#print float\n\t");
-					fprintf(out,"mov.s $f12, $f0\n\tli $v0, 2\n\tsyscall\n");
-				} fprintf(out, "\tli $v0 4\n\tla $a0, newline\n\tsyscall\n"); return;}
-		case add:  {fprintf(out, "\t#addition      \n\tadd.s $f0, $f1, $f2\n"); break;}
-		case sub:  {fprintf(out, "\t#substraction  \n\tsub.s $f0, $f1, $f2\n"); break;}
-		case mult: {fprintf(out, "\t#multiplication\n\tmul.s $f0, $f1, $f2\n"); break;}
-		case divi: {fprintf(out, "\t#division      \n\tdiv.s $f0, $f1, $f2\n"); break;}
-		case eq: {
-			if (q->res->type == t_int)
-				fprintf(out, "\t#conversion \n\tcvt.w.s $f1, $f1\n"); // conversion float->int
-			fprintf(out, "\t#affectation   \n\tmov.s $f0, $f1\n");break;
+	case prnt:
+		if(q->res->type == t_int) {
+			mips_comment("print int");
+			mips_l("mfc1 $t0, $f0");
+			mips_l("move $a0, $t0");
+			mips_l("li $v0, 1");
+			mips_l("syscall");
+		} else {
+			mips_comment("print float");
+			mips_l("mov.s $f12, $f0");
+			mips_l("li $v0, 2");
+			mips_l("syscall");
 		}
-		default: {fprintf(stderr, "quad_toMips_float: unknow op %s\n", quad_opToStr(q->op));break;}
+		mips_l("li $v0 4");
+		mips_l("la $a0, newline");
+		mips_l("syscall");
+		return;
+		break;
+	case add:
+		fprintf(out, "\t#addition      \n\tadd.s $f0, $f1, $f2\n");
+		break;
+
+	case sub:
+		fprintf(out, "\t#substraction  \n\tsub.s $f0, $f1, $f2\n");
+		break;
+
+	case mult:
+		fprintf(out, "\t#multiplication\n\tmul.s $f0, $f1, $f2\n");
+		break;
+
+	case divi:
+		fprintf(out, "\t#division      \n\tdiv.s $f0, $f1, $f2\n");
+		break;
+
+	case eq:
+		if (q->res->type == t_int)
+			// conversion float->int
+			fprintf(out, "\t#conversion \n\tcvt.w.s $f1, $f1\n");
+		fprintf(out, "\t#affectation   \n\tmov.s $f0, $f1\n");
+		break;
+
+	default:
+		fprintf(stderr, "quad_toMips_float: unknow op %s\n", quad_opToStr(q->op));
 	}
-	fprintf(out, "\ts.s $f0, %s\n",q->res->id); // store the new res into the res data seg
+	// store the new res into the res data seg
+	mips_l("s.s $f0, %s",q->res->id);
 }
 
 
