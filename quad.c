@@ -209,26 +209,87 @@ void quad_toMips_matrix (struct quad* q, FILE* out) {
 
 char* quad_opToStr(enum Op op){
 	switch (op) {
-		case eq:   { return "="; }
-		case add:  { return "+"; }
-		case sub:  { return "-"; }
-		case mult: { return "*"; }
-		case divi: { return "/"; }
-		case neg:  { return "-"; }
-		case incr: { return "++";}
-		case decr: { return "--";}
-		case beq:  { return "==";}
-		case bne:  { return "!=";}
-		case bgt:  { return ">"; }
-		case blt:  { return "<"; }
-		case bge:  { return ">=";}
-		case ble:  { return "<=";}
-		case not:  { return "!"; }
-		case and:  { return "&&";}
-		case or:   { return "||";}
-		case jump: { return "jump";}
-		case label:{ return "label";}
-		default: break;
+	case eq:
+		return "=";
+		break;
+
+	case add:
+		return "+";
+		break;
+
+	case sub:
+		return "-";
+		break;
+
+	case mult:
+		return "*";
+		break;
+
+	case divi:
+		return "/";
+	break;
+
+	case neg:
+		return "-";
+		break;
+
+	case incr
+		return "++"
+		break;
+
+	case decr
+		return "--"
+		break;
+
+	case beq:
+		return "=="
+			break;
+
+	case bne:
+		return "!="
+			break;
+
+	case bgt:
+		return ">";
+		break;
+
+	case blt:
+		return "<";
+		break;
+
+	case bge:
+		return ">=";
+		break;
+
+	case ble:
+		return "<=";
+		break;
+
+	case not:
+		return "!";
+		break;
+
+	case and:
+		return "&&";
+		break;
+
+	case or:
+		return "||";
+		break;
+
+	case jump:
+		return "jump"
+		break;
+
+	case label:
+		return "label";
+		break;
+
+	case arr_aff:
+		return "[]=";
+		break;
+	default:
+		break;
 	}
 	return ""; // avoid warning
 }
