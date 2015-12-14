@@ -224,11 +224,12 @@ void quad_toMips_array (struct quad* q, FILE* out) {
 		mips_l("s.s $f0, %s + %d", q->res->id, (int) q->arg1->value);
 		break;
 	case prnt:
-		// load array address into $a1
-		mips_l("la $a1, %s", q->res->id);
-		// missing: the index of the value
-		mips_l("l.s $f12 %d($a1)", 0);
+		mips_l("l.s $f12 %s + %d", q->res->id, (int) q->arg1->value);
 		mips_l("li $v0, 2"); // print float
+		mips_l("syscall");
+
+		mips_l("addi $a0,$0,10"); // print space
+		mips_l("li $v0, 11");
 		mips_l("syscall");
 		break;
 	default:

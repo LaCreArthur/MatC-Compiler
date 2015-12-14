@@ -353,6 +353,24 @@ stmnt:
       YYABORT;
     }
   }
+  | PRINT '(' ID indice ')' ';'
+  {
+	  struct symbol* sym_arr;
+	  struct symbol* sym_offset = symbol_alloc();
+	  sym_offset = symbol_newtemp(&tds);
+	  sym_offset->type = t_int;
+
+	  if ((sym_arr = symbol_find(tds, $3)) == NULL) {
+		  error_undeclared(filename, line, column, $3);
+		  exit_status = FAIL;
+		  return 1;
+	  }
+
+	  sym_offset->value = compute_offset(sym_arr->arr);
+	  quad_add(&$$.code, quad_gen(prnt, sym_offset, NULL, sym_arr));
+
+	  tmp_arr_clear();
+  }
   | PRINTF '(' STR ')' ';'
   {
     printf(" PRINTF match ! \n");
