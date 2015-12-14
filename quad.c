@@ -42,7 +42,7 @@ void quad_print (struct quad* list){
 	if (list == NULL) printf("quad_print : code null\n");
 	while (list != NULL) {
 		printf("%d :\t", list->label);
-		if (list->op >= beq && list-> op <= ble) { // relop
+		if (list->op >= beq && list-> op <= label) { // relop
 			printf("if %s %s %s goto label%s",
 				list->arg1->id, quad_opToStr(list->op), list->arg2->id, list->res->id);
 		}
