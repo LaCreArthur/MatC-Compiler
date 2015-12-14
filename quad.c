@@ -220,7 +220,7 @@ void quad_toMips_array (struct quad* q, FILE* out) {
 	case arr_aff:
 		mips_comment("%s []= %d %s", q->res->id,
 					 (int) q->arg1->value, q->arg2->id);
-		mips_l("l.s $f0, %s", q->arg1->id);
+		mips_l("l.s $f0, %s", q->arg2->id);
 		mips_l("s.s $f0, %s + %d", q->res->id, (int) q->arg1->value);
 		break;
 	case prnt:
