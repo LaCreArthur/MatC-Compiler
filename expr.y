@@ -274,7 +274,39 @@ stmnt:
   }
   | ID indice affect
   {
-    // access to an element of the array
+	  // affectation in array element
+
+	  struct symbol* sym_arr;
+
+	  // temp int for the offset
+	  struct symbol* sym_offset = symbol_alloc();
+	  int i;
+	  sym_offset = symbol_newtemp(&tds);
+	  sym_offset->type = t_int;
+
+	  // retrieve the existing array
+	  if ((sym_arr = symbol_find(tds, $1)) == NULL) {
+	      error_undeclared(filename, line, column, $1);
+		  exit_status = FAIL;
+		  return 1;
+	  }
+
+	  /* compute the offset */
+
+	  // float a[m][n][o];
+	  // a [i][j][k] = 3.0;
+	  // offset = i*n + j*n + o;
+
+	  for (i=0; i < tmp_dims_index - 1; i++) {
+	  	  sym_offset->value += tmp_dims[i] * sym_arr->arr->dims[i+1];
+	  }
+	  sym_offset->value += tmp_dims[i];
+	  sym_offset->value *= 4; // size of float
+	  quad_add(&$$.code, quad_gen(arr_aff, sym_offset, $3.result, sym_arr));
+
+	  tmp_arr_clear();
+
+
   }
   | ID affect
   {

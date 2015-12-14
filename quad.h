@@ -7,7 +7,8 @@ enum Op{
 	beq, bne, bgt, blt, 			// rel op
 	bge, ble, jump,	label, 		// rel op
 	not, and, or,							// bool op
-	prnt, prntf, prntm				// print op
+	prnt, prntf, prntm,				// print op
+	arr_aff
 } Op;
 
 struct quad {

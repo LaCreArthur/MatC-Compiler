@@ -213,13 +213,21 @@ void quad_toMips_intOrFloat (struct quad* q, FILE* out){
 
 
 void quad_toMips_array (struct quad* q, FILE* out) {
-	fprintf(out,"#load\n\tla $a1, %s\n", q->res->id);
+	mips_comment("op: %s", quad_opToStr(q->op));
+	mips_comment("load %s", q->res->id);
 
 	switch (q->op) {
+	case arr_aff:
+		mips_comment("%s []= %d %s", q->res->id,
+					 (int) q->arg1->value, q->arg2->id);
+		mips_l("l.s $f0, %s", q->arg1->id);
+		mips_l("s.s $f0, %s + %d", q->res->id, (int) q->arg1->value);
+		break;
 	case prnt:
 		// load array address into $a1
+		mips_l("la $a1, %s", q->res->id);
 		// missing: the index of the value
-		mips_l("\tl.s $f12 %d($a1)\n", 0);
+		mips_l("l.s $f12 %d($a1)", 0);
 		mips_l("li $v0, 2"); // print float
 		mips_l("syscall");
 		break;
@@ -234,8 +242,9 @@ void quad_toMips_matrix (struct quad* q, FILE* out) {
 		mips_comment("print array");
 		mips_l("li $t0, %d", q->res->arr->size); // load array size in t0
 		mips_l("li $t1 0\n"); // loop counter
+
 		mips_label("print_loop");
-		mips_l("l.s $f12 ($a1)"); // load array address into $a1
+		mips_l("l.s $f12 ($a1)"); // load array into $a1
 		mips_l("li $v0, 2"); //
 		mips_l("syscall");
 
