@@ -19,6 +19,17 @@
   int tmp_dims[10];
   int tmp_dims_index = 0;
 
+  void tmp_arr_clear() {
+	tmp_arr_index = 0;
+    tmp_dims_index = 0;
+    for (int i=0; i<ARRAY_MAX_SIZE; i++) {
+      tmp_arr[i] = INFINITY;
+    }
+    for (int i=0; i<DIMS_MAX_SIZE; i++) {
+      tmp_dims[i] = 0;
+    }
+}
+
 %}
 
 %union {
