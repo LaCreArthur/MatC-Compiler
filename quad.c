@@ -106,27 +106,81 @@ void quad_toMips (struct quad* list, FILE* out){
 	}
 }
 
-void quad_toMips_relop (struct quad* q, FILE* out){
-	fprintf(out, "#relop branch and jump\n");
+void quad_toMips_relop (struct quad* q, FILE* out) {
+	mips_comment("---- (%s, %s, %s, %s) ---- ",
+				 (q->res != NULL) ? q->res->id: "--",
+				 quad_opToStr(q->op),
+				 (q->arg1 != NULL) ? q->arg1->id: "--",
+				 (q->arg2 != NULL) ? q->arg2->id: "--");
+	mips_l("\n");
+
+	mips_comment("relop branch and jump");
+
 	if (q->arg1 != NULL) {
-		fprintf(out,"\tl.s $f1, %s\n", q->arg1->id); // load arg1 into $f1
-		if (q->arg1->type == t_int) fprintf(out,"\tcvt.s.w $f1, $f1\n");
+		// load arg1 into $f1
+		mips_l("l.s $f1, %s", q->arg1->id);
+
+		if (q->arg1->type == t_int)
+			mips_l("cvt.s.w $f1, $f1");
 	}
+
 	if (q->arg2 != NULL) {
-		fprintf(out,"\tl.s $f2, %s\n", q->arg2->id); // load arg2 into $f2
-		if (q->arg2->type == t_int) fprintf(out,"\tcvt.s.w $f2, $f2\n");
+		// load arg2 into $f2
+		mips_l("l.s $f2, %s", q->arg2->id);
+
+		if (q->arg2->type == t_int)
+			mips_l("cvt.s.w $f2, $f2");
 	}
+
 	switch (q->op) {
-		case beq: {fprintf(out, "\tc.eq.s $f1, $f2\n\tbc1t label%d\n", (int)q->res->value); break;} // exist
-		case bne: {fprintf(out, "\tc.eq.s $f1, $f2\n\tbc1f label%d\n", (int)q->res->value); break;} // neq = !eq
-		case bgt: {fprintf(out, "\tc.le.s $f1, $f2\n\tbc1f label%d\n", (int)q->res->value); break;} // gt = !le
-		case blt: {fprintf(out, "\tc.lt.s $f1, $f2\n\tbc1t label%d\n", (int)q->res->value); break;} // exist
-		case bge: {fprintf(out, "\tc.lt.s $f1, $f2\n\tbc1f label%d\n", (int)q->res->value); break;}	// ge = !lt
-		case ble: {fprintf(out, "\tc.le.s $f1, $f2\n\tbc1t label%d\n", (int)q->res->value); break;} // exist
-		case jump: {fprintf(out, "\tj label%d\n", (int)q->res->value); break;}
-		case label: {fprintf(out, "\tlabel%d:\n", (int)q->res->value); break;}
-		default: {fprintf(stderr, "quad_toMips_relop: unknow op %s\n", quad_opToStr(q->op));break;}
+		// exist
+	case beq:
+		mips_l("c.eq.s $f1, $f2");
+		mips_l("bc1t label%d", (int)q->res->value);
+		break;
+
+
+		// neq = !eq
+	case bne:
+		mips_l("c.eq.s $f1, $f2");
+		mips_l("bc1f label%d", (int)q->res->value);
+		break;
+
+		// gt = !le
+	case bgt:
+		mips_l("c.le.s $f1, $f2");
+		mips_l("bc1f label%d", (int)q->res->value);
+		break;
+
+		// exist
+	case blt:
+		mips_l("c.lt.s $f1, $f2\n\tbc1t label%d\n", (int)q->res->value);
+		break;
+
+		// ge = !lt
+	case bge:
+		mips_l("c.lt.s $f1, $f2\n\tbc1f label%d\n", (int)q->res->value);
+		break;
+
+		// exist
+	case ble:
+		mips_l("c.le.s $f1, $f2\n\tbc1t label%d\n", (int)q->res->value);
+		break;
+
+	case jump:
+		mips_l("j label%d\n", (int)q->res->value);
+		break;
+
+	case label:
+		mips_l("label%d:", (int)q->res->value);
+		break;
+
+	default:
+		fprintf(stderr, "quad_toMips_relop: unknow op %s\n", quad_opToStr(q->op));
+
 	}
+	mips_comment("---- end of quad ----");
+	mips_l("\n");
 }
 
 void quad_toMips_intOrFloat (struct quad* q, FILE* out){
@@ -221,7 +275,13 @@ void quad_toMips_intOrFloat (struct quad* q, FILE* out){
 
 
 void quad_toMips_array (struct quad* q, FILE* out) {
-	mips_comment("op: %s", quad_opToStr(q->op));
+	mips_comment("---- (%s, %s, %s, %s) ---- ",
+				 q->res->id,
+				 quad_opToStr(q->op),
+				 (q->arg1 != NULL) ? q->arg1->id: "--",
+				 (q->arg2 != NULL) ? q->arg2->id: "--");
+	mips_l("\n");
+
 	mips_comment("load %s", q->res->id);
 
 	switch (q->op) {
@@ -243,6 +303,8 @@ void quad_toMips_array (struct quad* q, FILE* out) {
 	default:
 		mips_l("#unhandled op: %s", quad_opToStr(q->op));
 	}
+	mips_comment("---- end quad ----\n");
+	mips_l("\n");
 }
 
 void quad_toMips_matrix (struct quad* q, FILE* out) {
