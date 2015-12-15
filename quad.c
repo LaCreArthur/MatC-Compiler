@@ -184,7 +184,8 @@ void quad_toMips_relop (struct quad* q, FILE* out) {
 }
 
 void quad_toMips_intOrFloat (struct quad* q, FILE* out){
-	if (q->op >= beq && q-> op <= label) { // branch to relop
+	// branch to relop
+	if (q->op >= beq && q-> op <= ble) {
 		quad_toMips_relop(q, out);
 		return;
 	}
