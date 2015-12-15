@@ -27,7 +27,9 @@ void expr_add(int op, struct symbol** res_result, struct quad** res_code,
   quad_add(res_code, quad_gen( op,arg1_result,arg2_result,*res_result));
 }
 
-struct symbol* affectation(int type, char* id, struct symbol* res, struct quad** code, struct quad* q, int declare){
+struct symbol* affectation(int type, char* id, struct symbol* res,
+						   struct quad** code,
+						   struct quad* q, int declare) {
   quad_add(code, q); // store the E code
   struct symbol* new_id; // declare the possible new id
   if((new_id = symbol_find(tds, id)) != NULL){ // new id already existe
