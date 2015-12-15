@@ -64,7 +64,7 @@
   } quadlist;
 }
 
-%type <codegen> expression affect statement block
+%type <codegen> expression assign statement block
 %type <dims> dimensions
 %type <values> values
 %type <quadlist> condition
@@ -250,7 +250,7 @@ condition:
 statement:
   ';' {$$.code = NULL;}// do nothing
 
-  | TYPE ID affect
+  | TYPE ID assign
   { // printf(" Type : %d !\n", $1);
     struct symbol* new_id;
     if ( (new_id = affectation($1,$2,$3.result, &$$.code, $3.code,1)) == NULL) {
@@ -262,7 +262,7 @@ statement:
     quad_add(&$$.code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
   }
 
-  | TYPE ID dimensions affect
+  | TYPE ID dimensions assign
   {
     if($1 == t_int || $1 == t_bool){ // wrong array type
       fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of "
@@ -298,7 +298,7 @@ statement:
     }
   }
 
-  | ID indexes affect
+  | ID indexes assign
   {
 	  // affectation in array element
 
@@ -327,7 +327,7 @@ statement:
 
   }
 
-  | ID affect
+  | ID assign
   {
     if (affectation(0,$1,$2.result, &$$.code, $2.code,0) == NULL) { // arg char* type is not needed
           column-=strlen($1)+3;
@@ -398,7 +398,7 @@ statement:
   }
   ;
 
-affect:
+assign:
     ';'
   { $$.result = NULL; $$.code = NULL;} // not tested
 
