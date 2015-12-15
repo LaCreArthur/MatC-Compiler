@@ -92,7 +92,6 @@
 axiom:
 
 	| main
-
 	;
 main:
   TYPE MAIN '(' ')' '{' block
@@ -390,7 +389,7 @@ statement:
   | expression INCRorDECR	';'
   {
     // to add or remove 1
-    int op = ($2[0] == '+' ? incr : decr);
+    int op = ($2[0] == '+' ? add : sub);
 
     // a temp with value 1
     struct symbol* incrOrDecr_tmp = (struct symbol*) calloc(1, sizeof(struct symbol));
@@ -398,10 +397,9 @@ statement:
     incrOrDecr_tmp->value = 1;
 
     // add a quad E = E +/- 1
-    quad_add(&$1.code, quad_gen(op, $1.result, incrOrDecr_tmp, $1.result));
 
-    //$1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
-    quad_add(&code, $1.code);
+    $1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
+    affectation(0,$1.result->id,incrOrDecr_tmp, &$$.code, quad_gen(op, $1.result, incrOrDecr_tmp, incrOrDecr_tmp),0);
   }
 
   | PRINT '(' ID ')' ';'
