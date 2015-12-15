@@ -134,6 +134,12 @@ void quad_toMips_intOrFloat (struct quad* q, FILE* out){
 		quad_toMips_relop(q, out);
 		return;
 	}
+	mips_comment("---- (%s, %s, %s, %s) ---- ",
+				 q->res->id,
+				 quad_opToStr(q->op),
+				 (q->arg1 != NULL) ? q->arg1->id: "--",
+				 (q->arg2 != NULL) ? q->arg2->id: "--");
+	mips_l("\n");
 	mips_comment("load");
 	mips_l("l.s $f0, %s", q->res->id); // load res into $f0
 
@@ -208,7 +214,9 @@ void quad_toMips_intOrFloat (struct quad* q, FILE* out){
 		fprintf(stderr, "quad_toMips_float: unknow op %s\n", quad_opToStr(q->op));
 	}
 	// store the new res into the res data seg
-	mips_l("s.s $f0, %s",q->res->id);
+	mips_comment("store new res in res data segment");
+	mips_l("s.s $f0, %s", q->res->id);
+	mips_l("\n");
 }
 
 
@@ -343,6 +351,9 @@ char* quad_opToStr(enum Op op){
 
 	case arr_aff:
 		return "[]=";
+		break;
+	case prnt:
+		return "print";
 		break;
 	default:
 		break;
