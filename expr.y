@@ -342,9 +342,9 @@ statement:
     }
   }
 
-  | ID indexes assign
+  | ID array_indexes assign
   {
-	  // affectation in array element
+	  // assignment in array element
 
 	  struct symbol* sym_arr;
 
@@ -361,9 +361,12 @@ statement:
 	  }
 
 	  /* compute the offset */
-
-
 	  sym_offset->value = compute_offset(sym_arr->arr);
+
+	  /* add the quads */
+	  // result of `assign`
+	  quad_add(&$$.code, $3.code);
+	  // assignment
 	  quad_add(&$$.code, quad_gen(arr_aff, sym_offset, $3.result, sym_arr));
 
 	  tmp_arr_clear();
@@ -416,7 +419,7 @@ statement:
     }
   }
 
-  | PRINT '(' ID indexes ')' ';'
+  | PRINT '(' ID array_indexes ')' ';'
   {
 	  struct symbol* sym_arr;
 	  struct symbol* sym_offset = symbol_alloc();
@@ -496,14 +499,14 @@ values:
   }
   ;
 
-indexes:
+array_indexes:
     '[' expression ']'
 	{
 		tmp_dims[tmp_dims_index] = $2.result->value;
 		tmp_dims_index++;
 	}
 
-    | indexes '[' expression ']'
+    | array_indexes '[' expression ']'
 	{
 		tmp_dims[tmp_dims_index] = $3.result->value;
 		tmp_dims_index++;
@@ -582,7 +585,7 @@ expression:
     $$.result->value = $1;
   }
 
-  | ID indexes
+  | ID array_indexes
   {
 	  
   }
