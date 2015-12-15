@@ -1,6 +1,6 @@
 %{
   #ifdef YYDEBUG
-    yydebug=1;
+    int yydebug = 1;
   #endif
   #include <stdio.h>
   #include <stdlib.h>
