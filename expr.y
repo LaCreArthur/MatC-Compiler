@@ -73,7 +73,7 @@
 %token <int_value> RELOP NOT AND OR
 %token <float_value> FLOAT
 %token <str_value> ID INCRorDECR STR
-%token MAIN PRINT PRINTF PRINTM IF ELSE WHILE
+%token MAIN PRINT PRINTF PRINTM IF ELSE WHILE FOR
 %token '+' '-' '*' '/'
 %token '(' ')' '[' ']'
 %token END
@@ -110,7 +110,49 @@ block:
     else $$.code = $2.code;
     code = $$.code;
   }
+  | FOR '(' ID assign condition ';' ID assign ')' '{' block block
+  {
+    // ID assignment
+    if (affectation(0,$3,$4.result, &$$.code, $4.code,0) == NULL) {
+          column-=strlen($3)+3;
+          fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
+                  filename, line, column, $3);
+          exit_status = FAIL;
+          return 1;
+    }
 
+    struct quad* jump_loop;
+    struct quad* label_loop;
+    struct quad* label_true; // equivaut a tag dans "if cond tag stmnt next"
+    struct quad* label_next; // next block label
+    struct quad* update;
+
+    label_loop = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $5.code->label));
+    jump_loop  = quad_gen(jump, NULL, NULL, label_loop->res);
+    label_true = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $11.code->label));
+    label_next = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $12.code->label));
+    // ID update
+    if (affectation(0,$7,$8.result, &update, $8.code,0) == NULL) {
+          column-=strlen($7)+3;
+          fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
+                  filename, line, column, $7);
+          exit_status = FAIL;
+          return 1;
+    }
+
+    quad_print(update);
+    quad_list_complete($5.truelist, label_true->res);  // backpatching truelist with label_true
+    quad_list_complete($5.falselist, label_next->res); // backpatching falselist with label_false
+
+    $$.code = label_loop;           // label before condition
+    quad_add(&$$.code, $5.code);    // condition code
+    quad_add(&$$.code, label_true); // label for true
+    quad_add(&$$.code, $11.code);   // stmnt for true
+    quad_add(&$$.code, update);     // concat the update code at the end of the true list
+    quad_add(&$$.code, jump_loop);  // jump before condition
+    quad_add(&$$.code, label_next); // label after stmnt true
+    quad_add(&$$.code, $12.code);   // the rest of the code
+  }
   | WHILE '(' condition ')' '{' block block
   {
     struct quad* jump_loop;
@@ -119,7 +161,7 @@ block:
     struct quad* label_next; // next block label
 
     label_loop = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $3.code->label));
-    jump_loop       = quad_gen(jump, NULL, NULL, label_loop->res);
+    jump_loop  = quad_gen(jump, NULL, NULL, label_loop->res);
     label_true = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $6.code->label));
     label_next = quad_gen(label, NULL, NULL,symbol_newcst(&tds, $7.code->label));
 
@@ -461,7 +503,7 @@ indexes:
 
 	}
 ;
-    
+
  // store multiple indexes for multiple dimensions arrays
 dimensions:
       '[' INT ']'

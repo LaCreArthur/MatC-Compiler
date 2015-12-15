@@ -41,6 +41,7 @@ noaplha				[\'\"\{\};,]
 "if"					{	printf("%s", yytext); column_incr; return IF;}
 "else"				{	printf("%s", yytext); column_incr; return ELSE;}
 "while"				{	printf("%s", yytext); column_incr; return WHILE;}
+"for"				{	printf("%s", yytext); column_incr; return FOR;}
 "=="					{	printf("%s", yytext); column_incr; yylval.int_value = 8;  return RELOP;} /* 9 : int code for the enum */
 "!="					{	printf("%s", yytext); column_incr; yylval.int_value = 9; return RELOP;}
 ">"						{	printf("%s", yytext); column_incr; yylval.int_value = 10; return RELOP;}

@@ -73,6 +73,7 @@ void symbol_free (struct symbol* list){
       //printf("symbol free %s\n", list->id);
       list = list->next;
       free(tmp->id);
+      free(tmp->arr);
       free(tmp);
    }
 }
