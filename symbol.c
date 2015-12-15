@@ -96,6 +96,8 @@ void tds_toMips (struct symbol* list, FILE* out) {
 			array_print(list->arr->values, out);
 			break;
 		case t_mat:
+			fprintf(out, "%s:\t.float ", list->id);
+			matrix_print(list->mat, out);
 			break;
 		case t_bool:
 			break;

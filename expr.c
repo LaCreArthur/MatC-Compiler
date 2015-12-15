@@ -61,7 +61,7 @@ struct symbol* affectation(int type, char* id, struct symbol* res,
     }
     else if (type == t_mat) {
       new_id->type = t_arr;
-      new_id->arr = res->arr; // copie the E value into the id value
+      new_id->mat = res->mat; 
     }
   }
   return new_id;

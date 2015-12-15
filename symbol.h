@@ -14,6 +14,7 @@ struct symbol {
       enum Type type;
       float value;
       array* arr;
+ 	  matrix* mat;
       struct symbol* next;
 
 };

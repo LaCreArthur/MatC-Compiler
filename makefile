@@ -1,7 +1,7 @@
 FILE 		= expr
 CFLAGS 	= -g -Wall -Wextra -Wno-unused-function
 LIBS		= -ll -ly -lfl
-CFILES	=	symbol.c quad.c matrix.c testmatrix.c
+CFILES	=	symbol.c quad.c matrix.c
 DEBUG		= -DYYDEBUG
 
 all : $(FILE).y $(FILE).lex $(CFILES)

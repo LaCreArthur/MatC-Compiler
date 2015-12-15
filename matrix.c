@@ -3,11 +3,11 @@
 #include <math.h>
 #include "matrix.h"
 
-matrix matrix_new(int rows, int cols){
-	matrix new;
-	new.mat = (float*) malloc (rows*cols*sizeof(float));
-	new.rows = rows;
-	new.cols = cols;
+matrix* matrix_new(int rows, int cols){
+	matrix *new = malloc(sizeof(matrix));
+	new->values = (float*) malloc (rows*cols*sizeof(float));
+	new->rows = rows;
+	new->cols = cols;
 	return new;
 }
 
@@ -33,20 +33,22 @@ array* array_new(int* dims, int D){
 	return new;
 }
 
+void matrix_print(matrix* m, FILE* out){
+	int i,j;
+	for (i=0; i < m->rows; i++){
+		for(j=0; j < m->cols; j++) {
+			fprintf(out, "%f\t", m->values[i*m->cols + j]);
+		}
+	}
+}
+
+
+/*
 void matrix_set(matrix *m, int row, int col, float nb){
 	m->mat[(m->cols)*row + col] = nb;
 }
 
-void matrix_print(matrix m){
-	int i,j;
-	for (i=0; i<m.rows; i++){
-		for(j=0; j<m.cols; j++) {
-			printf("%f\t", m.mat[i*m.cols+j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
+*/
 
 void array_print(float* arr, FILE* out) {
   unsigned int i;
@@ -57,6 +59,7 @@ void array_print(float* arr, FILE* out) {
   fprintf(out,"%.2f\n",arr[i]);
 }
 
+/* 
 matrix matrix_transpos(matrix m) {
 	matrix trans = matrix_new(m.cols, m.rows);
 	for (int i=0; i<m.cols; i++){
@@ -157,9 +160,9 @@ matrix matrix_extract(matrix a, int row, int* rows, int col, int* cols){
 	}
 	return res;
 }
-
+*/
 void matrix_free(matrix* m){
-	free(m->mat);
+	free(m->values);
 	free(m);
 }
 

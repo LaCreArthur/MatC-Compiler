@@ -10,7 +10,6 @@
   #include "quad.h"
   #include "matrix.h"
   #include "expr.h"
-  #include "testmatrix.h"
 
   int yylex();
   int yyerror();
@@ -64,7 +63,7 @@
   } quadlist;
 }
 
-%type <codegen> expression assign statement block
+%type <codegen> expression assign statement block mat_declaration
 %type <dims> dimensions
 %type <values> values
 %type <quadlist> condition
@@ -74,6 +73,7 @@
 %token <float_value> FLOAT
 %token <str_value> ID INCRorDECR STR
 %token MAIN PRINT PRINTF PRINTM IF ELSE WHILE FOR
+%token T_MATRIX
 %token '+' '-' '*' '/'
 %token '(' ')' '[' ']'
 %token END
@@ -305,6 +305,13 @@ statement:
     quad_add(&$$.code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
   }
 
+  | mat_declaration assign
+  {
+	  
+  }
+
+
+
   | TYPE ID dimensions assign
   {
     // check for wrong array type
@@ -313,6 +320,9 @@ statement:
                      "type '%s'\n", filename, line, column, symbol_typeToStr($1));
       exit_status = FAIL;
     }
+	else if ($1 == t_mat) {
+
+	}
     else {
       // array_print(tmp_arr, stdout);
       if(tmp_arr_index > $4.result->arr->size){
@@ -449,6 +459,35 @@ statement:
   }
   ;
 
+mat_declaration:
+    T_MATRIX ID '[' INT ']' '[' INT ']'
+	{
+	  // matrix assignment
+	  int i, j;
+	  struct symbol* new_id = symbol_alloc();
+
+	  new_id->id = $2;
+	  new_id->type = t_mat;
+	  new_id->mat = matrix_new($4, $7);
+	  new_id->mat->rows = $4;
+	  new_id->mat->cols = $7;
+	  new_id->value = INFINITY;
+
+	  // on initialise à 0;
+	  for (i=0; i < new_id->mat->rows; i++)
+		  for (j=0; j < new_id->mat->cols; j++)
+			  *(new_id->mat->values + i*new_id->mat->cols + j) = 0;
+	  
+	  if ((new_id = affectation(t_mat, $2, new_id, &$$.code, NULL, 1)) == NULL) {
+        fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",
+				filename, line, $2);
+        exit_status = FAIL;
+        YYABORT;
+      }
+    }
+	;	  
+
+
 assign:
     ';'
   { $$.result = NULL; $$.code = NULL;} // not tested
@@ -467,6 +506,18 @@ assign:
     $$.result->arr->values[$$.result->arr->size] = INFINITY;
   }
   ;
+
+/*assign_matrix:
+    ';'
+	{
+	}
+
+    | '=' '{' braces_matrix '}' ';'
+	{
+	}
+	;*/
+
+    
 
 
 brackets:

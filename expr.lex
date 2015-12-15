@@ -19,8 +19,6 @@ op						[+*/()=-]
 /*relop					"=="|"!="|">"|"<"|">="|"<="*/
 newline				"\n"
 escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"|" "
-types					matrix|int|float
-keyword 	   	else|if|for|while|matrix|return
 
 comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
 string				\"([^"])*\"
@@ -33,7 +31,7 @@ noaplha				[\'\"\{\};,]
 {escapesec}   { printf("%s", yytext); column_incr;}
 "int"		  	  { printf("%s", yytext); column_incr; yylval.int_value = 0; return TYPE; }
 "float"		    { printf("%s", yytext); column_incr; yylval.int_value = 1; return TYPE; }
-"matrix"	    { printf("%s", yytext); column_incr; yylval.int_value = 2; return TYPE; }
+"matrix"	    { printf("%s", yytext); column_incr; yylval.int_value = 2; return T_MATRIX; }
 "main"				{	printf("main"); column_incr; return MAIN;}
 "print"				{	printf("%s", yytext); column_incr; return PRINT;}
 "printf"			{	printf("%s", yytext); column_incr; return PRINTF;}
