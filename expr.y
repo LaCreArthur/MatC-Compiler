@@ -65,17 +65,17 @@
 }
 
 %type <codegen> expression affect statement block
-%type <dims> indice
+%type <dims> dimensions
 %type <values> values
 %type <quadlist> condition
 
-%token <int_value> INT INDEX TYPE
+%token <int_value> INT TYPE
 %token <int_value> RELOP NOT AND OR
 %token <float_value> FLOAT
 %token <str_value> ID INCRorDECR STR
 %token MAIN PRINT PRINTF PRINTM IF ELSE WHILE
 %token '+' '-' '*' '/'
-%token '(' ')'
+%token '(' ')' '[' ']'
 %token END
 
 %left '+' '-'
@@ -84,7 +84,6 @@
 %left RELOP NOT AND OR
 
 %right INCRorDECR
-%right INDEX
 
 %start axiom
 
@@ -263,7 +262,7 @@ statement:
     quad_add(&$$.code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
   }
 
-  | TYPE ID indice affect
+  | TYPE ID dimensions affect
   {
     if($1 == t_int || $1 == t_bool){ // wrong array type
       fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of "
@@ -299,7 +298,7 @@ statement:
     }
   }
 
-  | ID indice affect
+  | ID indexes affect
   {
 	  // affectation in array element
 
@@ -369,7 +368,7 @@ statement:
     }
   }
 
-  | PRINT '(' ID indice ')' ';'
+  | PRINT '(' ID indexes ')' ';'
   {
 	  struct symbol* sym_arr;
 	  struct symbol* sym_offset = symbol_alloc();
@@ -448,16 +447,32 @@ values:
   }
   ;
 
-  indice: // store multiple indexs for multiple dimensions arrays
-      INDEX
+indexes:
+    '[' expression ']'
+	{
+		tmp_dims[tmp_dims_index] = $2.result->value;
+		tmp_dims_index++;
+	}
+
+    | indexes '[' expression ']'
+	{
+		tmp_dims[tmp_dims_index] = $3.result->value;
+		tmp_dims_index++;
+
+	}
+;
+    
+ // store multiple indexes for multiple dimensions arrays
+dimensions:
+      '[' INT ']'
     {
-      tmp_dims[tmp_dims_index] = $1;
+      tmp_dims[tmp_dims_index] = $2;
       tmp_dims_index++;
     }
 
-    | indice INDEX
+    | dimensions '[' INT ']'
     {
-      tmp_dims[tmp_dims_index] = $2;
+      tmp_dims[tmp_dims_index] = $3;
       tmp_dims_index++;
     }
     ;
@@ -519,7 +534,7 @@ expression:
     $$.result->value = $1;
   }
 
-  | ID indice
+  | ID indexes
   {
   //printf("___array[%d] spoted\n", $2);
   }
