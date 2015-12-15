@@ -21,7 +21,6 @@ newline				"\n"
 escapesec   	"\a"|"\\b"|"\t"|"\\t"|"\b"|"\\a"|" "
 types					matrix|int|float
 keyword 	   	else|if|for|while|matrix|return
-index					("["{int}"]")
 
 comment 	  	\/\*([^\*]*\*[\*]*[^\/\*])*[^\*]*\*[\*]*\/
 string				\"([^"])*\"
@@ -51,6 +50,9 @@ noaplha				[\'\"\{\};,]
 "!"						{	printf("%s", yytext); column_incr; yylval.int_value = 14; return NOT;}
 "&&"					{	printf("%s", yytext); column_incr; yylval.int_value = 15; return AND;}
 "||"					{	printf("%s", yytext); column_incr; yylval.int_value = 16; return OR;}
+"]"                {    printf("%s", yytext); column_incr; return ']';}
+"["                {    printf("%s", yytext); column_incr; return '[';}
+
 
 {int}					{ yylval.int_value = atoi(yytext); column_incr; return(INT);}
 {float}+({exp})?	{ yylval.float_value=atof(yytext); column_incr; return(FLOAT); }
@@ -58,12 +60,12 @@ noaplha				[\'\"\{\};,]
 {id}					{ if(DEBUG) printf(" id_");  printf("%s", yytext); column_incr;
 								yylval.str_value = safeId(strdup(yytext)); return ID;}
 
-{index}				{ if(DEBUG) printf(" ix_"); printf("%s", yytext); yylval.int_value = atoi(yytext+1); column_incr; return(INDEX);}
 "++"|"--"			{ printf("%s", yytext); yylval.str_value = yytext; column_incr; return INCRorDECR;}
 {string}			{ if(DEBUG) printf(" str_");  printf("%s", yytext); yylval.str_value = strdup(yytext);
 								column_incr; return STR;}
 {op}					{ printf("%c", yytext[0]); column_incr; return(yytext[0]);}
 {comment}     { printf("%s", yytext); column_incr;}
+
 
 {noaplha}			{ printf("%c", yytext[0]); return(yytext[0]);}
 . 						{ printf("[lex] unknown char : %s\n", yytext);}
