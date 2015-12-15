@@ -191,44 +191,45 @@ block:
 condition:
   expression RELOP expression
   {
-    // printf("relop %d \n", $2);
-    struct quad* goto_true   = quad_gen($2, $1.result, $3.result, NULL);
-    struct quad* goto_false  = quad_gen(jump, NULL, NULL, NULL);
-    $$.code = $1.code;
-    quad_add(&$$.code, $3.code);
-    quad_add(&$$.code, goto_true);
-    quad_add(&$$.code, goto_false);
-    $$.truelist   = quad_list_new(goto_true);
-    $$.falselist  = quad_list_new(goto_false);
+	  struct quad* goto_true   = quad_gen($2, $1.result, $3.result, NULL);
+	  struct quad* goto_false  = quad_gen(jump, NULL, NULL, NULL);
+	  $$.code = $1.code;
+	  quad_add(&$$.code, $3.code);
+	  quad_add(&$$.code, goto_true);
+	  quad_add(&$$.code, goto_false);
+	  $$.truelist   = quad_list_new(goto_true);
+	  $$.falselist  = quad_list_new(goto_false);
   }
 
   | '(' condition ')'
   {
-    $$.truelist = $2.truelist;
-    $$.falselist = $2.falselist;
-    $$.code = $2.code;
+	  $$.truelist = $2.truelist;
+	  $$.falselist = $2.falselist;
+	  $$.code = $2.code;
   }
 
   | NOT condition
   {
-    $$.truelist = $2.falselist;
-    $$.falselist = $2.truelist;
-    $$.code = $2.code;
+	  $$.truelist = $2.falselist;
+	  $$.falselist = $2.truelist;
+	  $$.code = $2.code;
   }
 
   | condition OR condition
   {
-    printf("cond -> expr OR expr\n");
-    struct quad* label_false  =
-      quad_gen(label, NULL, NULL, symbol_newcst(&tds, $3.truelist->node->label));
+	  printf("cond -> expr OR expr\n");
+	  struct quad* label_false  =
+		  quad_gen(label, NULL, NULL, symbol_newcst(&tds, $3.truelist->node->label));
+	  
+	  quad_list_complete($1.falselist, label_false->res);
+	  $$.code = $1.code;               // first condition
+	  quad_add(&$$.code, label_false); // if first is false goto second
+	  quad_add(&$$.code, $3.code);     // second cond
+	  $$.falselist = $3.falselist;
+	  $$.truelist = $1.truelist;
 
-    quad_list_complete($1.falselist, label_false->res);
-    $$.code = $1.code;               // first condition
-    quad_add(&$$.code, label_false); // if first is false goto second
-    quad_add(&$$.code, $3.code);     // second cond
-    $$.falselist = $3.falselist;
-    $$.truelist = $1.truelist;
-    quad_list_add(&$$.truelist, $3.truelist); // first or second cond true same jump
+	  // first or second cond true same jump
+	  quad_list_add(&$$.truelist, $3.truelist); 
   }
 
   | condition AND condition
@@ -248,10 +249,10 @@ condition:
   ;
 
 statement:
-  ';' {$$.code = NULL;}// do nothing
+  ';' {$$.code = NULL;} // do nothing
 
   | TYPE ID assign
-  { // printf(" Type : %d !\n", $1);
+  { 
     struct symbol* new_id;
     if ( (new_id = affectation($1,$2,$3.result, &$$.code, $3.code,1)) == NULL) {
       fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",
@@ -264,17 +265,18 @@ statement:
 
   | TYPE ID dimensions assign
   {
-    if($1 == t_int || $1 == t_bool){ // wrong array type
+    // check for wrong array type
+    if($1 == t_int || $1 == t_bool){ 
       fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of "
-                     "type '%s'\n",filename, line, column, symbol_typeToStr($1));
+                     "type '%s'\n", filename, line, column, symbol_typeToStr($1));
       exit_status = FAIL;
     }
     else {
       // array_print(tmp_arr, stdout);
       if(tmp_arr_index > $4.result->arr->size){
         // declare too many values inside the "{}"
-        fprintf(stderr,"%s:%d:%d: error: excess elements in array initializer\n"
-                      ,filename, line, column);
+		  fprintf(stderr,"%s:%d:%d: error: excess elements in array initializer\n",
+				  filename, line, column);
         exit_status = FAIL;
       }
       struct symbol* new_id;
@@ -329,8 +331,9 @@ statement:
 
   | ID assign
   {
-    if (affectation(0,$1,$2.result, &$$.code, $2.code,0) == NULL) { // arg char* type is not needed
-          column-=strlen($1)+3;
+	// arg char* type is not needed
+    if (affectation(0,$1,$2.result, &$$.code, $2.code,0) == NULL) { 
+          column -= strlen($1) + 3;
           fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
                   filename, line, column, $1);
           exit_status = FAIL;
@@ -340,14 +343,18 @@ statement:
   }
 
   | expression INCRorDECR	';'
-  { //printf("expr -> expr++\n");
-    int op = ($2[0] == '+' ? incr : decr); // to add or remove 1
+  {
+    // to add or remove 1
+    int op = ($2[0] == '+' ? incr : decr); 
+	
     // a temp with value 1
-    struct symbol* incrOrDecr_tmp = (struct symbol*)calloc(1,sizeof(struct symbol));
+    struct symbol* incrOrDecr_tmp = (struct symbol*) calloc(1, sizeof(struct symbol));
     temp_add(&incrOrDecr_tmp);
     incrOrDecr_tmp->value = 1;
+	
     // add a quad E = E +/- 1
     quad_add(&$1.code, quad_gen( op,$1.result,incrOrDecr_tmp,$1.result));
+	
     //$1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
     quad_add(&code, $1.code);
   }
@@ -356,11 +363,10 @@ statement:
   {
     struct symbol* id;
     if ((id = symbol_find(tds,$3)) != NULL) {
-      // printf("___found !");
       quad_add(&$$.code,quad_gen(prnt,NULL,NULL,id));
     }
     else {
-      column-=strlen($3)+3;
+      column -= strlen($3)+3;
       fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
               filename, line, column, $3);
       exit_status = FAIL;
@@ -412,7 +418,7 @@ assign:
     $$.result->type = t_arr;
     $$.result->value = INFINITY; // no float value for arrays
     $$.result->arr = array_new(tmp_dims, tmp_dims_index);
-    $$.result->arr->values=arr_cpy_tmp(tmp_arr,$$.result->arr->size);
+    $$.result->arr->values=arr_cpy_tmp(tmp_arr, $$.result->arr->size);
     $$.result->arr->values[$$.result->arr->size] = INFINITY;
   }
   ;
@@ -434,16 +440,17 @@ values:
   if ($$ == NULL) {
     printf("$$ is null");
   }
+  
   tmp_arr[tmp_arr_index] = $1;
   tmp_arr_index++;
-  printf("%.2f",$1);
+  printf("%.2f", $1);
   }
 
   | values ',' FLOAT
   {
   tmp_arr[tmp_arr_index] = $3;
   tmp_arr_index++;
-  printf("%.2f",$3);
+  printf("%.2f", $3);
   }
   ;
 
@@ -479,28 +486,28 @@ dimensions:
 
 expression:
   expression '+' expression
-  { //printf("expr -> expr + expr\n");
+  { 
     expr_add(add, &$$.result, &$$.code,
                    $1.result, $1.code,
                    $3.result, $3.code);
   }
 
   | expression '-' expression
-  { //printf("expr -> expr - expr\n");
+  { 
 		expr_add(sub, &$$.result, &$$.code,
 									 $1.result, $1.code,
 									 $3.result, $3.code);
   }
 
   | expression '*' expression
-  { //printf("expr -> expr * expr\n");
+  { 
     expr_add(mult, &$$.result, &$$.code,
                   $1.result, $1.code,
                   $3.result, $3.code);
   }
 
   | expression '/' expression
-  { //printf("expr -> expr / expr\n");
+  {
     expr_add(divi, &$$.result, &$$.code,
                   $1.result, $1.code,
                   $3.result, $3.code);
@@ -508,7 +515,6 @@ expression:
 
   | '-' expression %prec NEG
   {
-    //printf("-%d",$2.result->value);
     $$ = $2;
     $$.result->value = -$2.result->value;
   }
@@ -517,7 +523,7 @@ expression:
   { $$ = $2; }
 
   | INT
-  { //printf("expr -> INT\n");
+  { 
     printf("%d",$1);
     temp_add(&$$.result);
     $$.code = NULL;
@@ -526,7 +532,7 @@ expression:
   }
 
   | FLOAT
-  { //printf(expr -> INT\n");
+  { 
     printf("%.2f",$1);
     temp_add(&$$.result);
     $$.code = NULL;
@@ -536,26 +542,24 @@ expression:
 
   | ID indexes
   {
-  //printf("___array[%d] spoted\n", $2);
+	  
   }
 
   | ID
-  { //printf("expr -> ID\n");
-		//printf("ID = %s",$1);
-    struct symbol* id;
-    //printf("____(look for %s ... ", $1);
-    if ((id = symbol_find(tds,$1)) != NULL) {
-      //printf("found !)");
-      $$.result = id;
-    }
-    else {
-      column-=strlen($1)+3;
-      fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
-              filename, line, column, $1);
-      exit_status = FAIL;
-      return 1;
-    }
-		$$.code = NULL;
+  { 
+	  struct symbol* id;
+	  if ((id = symbol_find(tds,$1)) != NULL) {
+		  $$.result = id;
+	  }
+	  
+	  else {
+		  column -= strlen($1) + 3;
+		  fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
+				  filename, line, column, $1);
+		  exit_status = FAIL;
+		  return 1;
+	  }
+	  $$.code = NULL;
 	}
   ;
 
@@ -618,7 +622,9 @@ int main(int argc, char *argv[]){
   fprintf(out,"\n\tli $a0 1\n\tli $v0 1\n\tsyscall\n"); // end of asm code
   fprintf(out, "\tli $v0 4\n\tla $a0, newline\n\tsyscall\n\tj $ra"); // print a newline
 
-  printf("Assembler code successfully written to %s\n", asm_file);
+  if (exit_status == SUCCESS) {
+	  printf("Assembler code successfully written to %s\n", asm_file);
+  }
 
   quad_free(code);
   symbol_free(tds);
