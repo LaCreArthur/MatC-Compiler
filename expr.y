@@ -471,7 +471,7 @@ mat_declaration:
 	  new_id->mat = matrix_new($4, $7);
 	  new_id->mat->rows = $4;
 	  new_id->mat->cols = $7;
-	  new_id->value = INFINITY;
+	  new_id->value = INFINITY; // no float value on t_mat
 
 	  // on initialise à 0;
 	  for (i=0; i < new_id->mat->rows; i++)
