@@ -374,7 +374,7 @@ statement:
   | ID assign
   {
 	// arg char* type is not needed
-    if (affectation(0,$1,$2.result, &$$.code, $2.code,0) == NULL) { 
+    if (affectation(0, $1, $2.result, &$$.code, $2.code,0) == NULL) {
           column -= strlen($1) + 3;
           fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
                   filename, line, column, $1);
@@ -395,7 +395,7 @@ statement:
     incrOrDecr_tmp->value = 1;
 	
     // add a quad E = E +/- 1
-    quad_add(&$1.code, quad_gen( op,$1.result,incrOrDecr_tmp,$1.result));
+    quad_add(&$1.code, quad_gen(op, $1.result, incrOrDecr_tmp, $1.result));
 	
     //$1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
     quad_add(&code, $1.code);
@@ -404,7 +404,7 @@ statement:
   | PRINT '(' ID ')' ';'
   {
     struct symbol* id;
-    if ((id = symbol_find(tds,$3)) != NULL) {
+    if ((id = symbol_find(tds, $3)) != NULL) {
       quad_add(&$$.code,quad_gen(prnt,NULL,NULL,id));
     }
     else {
