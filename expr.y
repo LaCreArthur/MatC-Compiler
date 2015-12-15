@@ -64,7 +64,7 @@
   } quadlist;
 }
 
-%type <codegen> E affect stmnt block
+%type <codegen> expression affect statement block
 %type <dims> indice
 %type <values> values
 %type <quadlist> condition
@@ -100,7 +100,7 @@ main:
   ;
 
 block:
-   stmnt block
+   statement block
   {
     if($1.code != NULL) {
       $$.code = $1.code;
@@ -111,6 +111,7 @@ block:
     else $$.code = $2.code;
     code = $$.code;
   }
+
   | WHILE '(' condition ')' '{' block block
   {
     struct quad* jump_loop;
@@ -134,6 +135,7 @@ block:
     quad_add(&$$.code, label_next); // label after stmnt true
     quad_add(&$$.code, $7.code);    // the rest of the code
   }
+
   | IF '(' condition ')' '{' block block
   {
     struct quad* label_true;  // equivaut a tag dans "if cond tag stmnt next"
@@ -153,6 +155,7 @@ block:
     quad_add(&$$.code, label_next); // label after stmnt true
     quad_add(&$$.code, $7.code);    // the rest of the code
   }
+
   | IF '(' condition ')' '{' block ELSE '{' block block
   {
     struct quad*   q_jump;
@@ -182,11 +185,12 @@ block:
     quad_add(&$$.code, label_next); // label after stmnt false
     quad_add(&$$.code, $10.code);   // the rest of the code
   }
+
   | '}' {$$.code = NULL;}
   ;
 
 condition:
-  E RELOP E
+  expression RELOP expression
   {
     // printf("relop %d \n", $2);
     struct quad* goto_true   = quad_gen($2, $1.result, $3.result, NULL);
@@ -198,18 +202,21 @@ condition:
     $$.truelist   = quad_list_new(goto_true);
     $$.falselist  = quad_list_new(goto_false);
   }
+
   | '(' condition ')'
   {
     $$.truelist = $2.truelist;
     $$.falselist = $2.falselist;
     $$.code = $2.code;
   }
+
   | NOT condition
   {
     $$.truelist = $2.falselist;
     $$.falselist = $2.truelist;
     $$.code = $2.code;
   }
+
   | condition OR condition
   {
     printf("cond -> expr OR expr\n");
@@ -224,6 +231,7 @@ condition:
     $$.truelist = $1.truelist;
     quad_list_add(&$$.truelist, $3.truelist); // first or second cond true same jump
   }
+
   | condition AND condition
   {
     printf("cond -> expr AND expr\n");
@@ -240,19 +248,21 @@ condition:
   }
   ;
 
-stmnt:
+statement:
   ';' {$$.code = NULL;}// do nothing
 
   | TYPE ID affect
   { // printf(" Type : %d !\n", $1);
     struct symbol* new_id;
     if ( (new_id = affectation($1,$2,$3.result, &$$.code, $3.code,1)) == NULL) {
-      fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",filename, line, $2);
+      fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",
+			  filename, line, $2);
       exit_status = FAIL;
       YYABORT;
     }
     quad_add(&$$.code, quad_gen(eq, $3.result,NULL, new_id)); // store this stmnt code
   }
+
   | TYPE ID indice affect
   {
     if($1 == t_int || $1 == t_bool){ // wrong array type
@@ -270,7 +280,8 @@ stmnt:
       }
       struct symbol* new_id;
       if ( (new_id = affectation($1,$2,$4.result, &$$.code, $4.code,1)) == NULL) {
-        fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",filename, line, $2);
+        fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",
+				filename, line, $2);
         exit_status = FAIL;
         YYABORT;
 
@@ -287,6 +298,7 @@ stmnt:
       tmp_dims[i] = 0;
     }
   }
+
   | ID indice affect
   {
 	  // affectation in array element
@@ -315,6 +327,7 @@ stmnt:
 
 
   }
+
   | ID affect
   {
     if (affectation(0,$1,$2.result, &$$.code, $2.code,0) == NULL) { // arg char* type is not needed
@@ -326,7 +339,8 @@ stmnt:
     }
     // printf("affectation ok \n");
   }
-  | E INCRorDECR	';'
+
+  | expression INCRorDECR	';'
   { //printf("expr -> expr++\n");
     int op = ($2[0] == '+' ? incr : decr); // to add or remove 1
     // a temp with value 1
@@ -338,6 +352,7 @@ stmnt:
     //$1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
     quad_add(&code, $1.code);
   }
+
   | PRINT '(' ID ')' ';'
   {
     struct symbol* id;
@@ -353,6 +368,7 @@ stmnt:
       YYABORT;
     }
   }
+
   | PRINT '(' ID indice ')' ';'
   {
 	  struct symbol* sym_arr;
@@ -371,10 +387,12 @@ stmnt:
 
 	  tmp_arr_clear();
   }
+
   | PRINTF '(' STR ')' ';'
   {
     printf(" PRINTF match ! \n");
   }
+
   | PRINTM '(' ID ')' ';'
   {
     printf(" PRINTM match ! \n");
@@ -384,8 +402,10 @@ stmnt:
 affect:
     ';'
   { $$.result = NULL; $$.code = NULL;} // not tested
-  | '=' E ';'
+
+  | '=' expression ';'
   { $$ = $2;}
+
   | '=' '{' brackets '}' ';'
   {
     temp_add(&$$.result);
@@ -403,6 +423,7 @@ brackets:
     values
   {
   }
+
   | '{' values '}' ',' '{' brackets '}'
   {
   }
@@ -418,6 +439,7 @@ values:
   tmp_arr_index++;
   printf("%.2f",$1);
   }
+
   | values ',' FLOAT
   {
   tmp_arr[tmp_arr_index] = $3;
@@ -432,6 +454,7 @@ values:
       tmp_dims[tmp_dims_index] = $1;
       tmp_dims_index++;
     }
+
     | indice INDEX
     {
       tmp_dims[tmp_dims_index] = $2;
@@ -439,39 +462,45 @@ values:
     }
     ;
 
-E:
-  E '+' E
+expression:
+  expression '+' expression
   { //printf("expr -> expr + expr\n");
     expr_add(add, &$$.result, &$$.code,
                    $1.result, $1.code,
                    $3.result, $3.code);
   }
-  | E '-' E
+
+  | expression '-' expression
   { //printf("expr -> expr - expr\n");
 		expr_add(sub, &$$.result, &$$.code,
 									 $1.result, $1.code,
 									 $3.result, $3.code);
-	}
-  | E '*' E
+  }
+
+  | expression '*' expression
   { //printf("expr -> expr * expr\n");
     expr_add(mult, &$$.result, &$$.code,
                   $1.result, $1.code,
                   $3.result, $3.code);
   }
-  | E '/' E
+
+  | expression '/' expression
   { //printf("expr -> expr / expr\n");
     expr_add(divi, &$$.result, &$$.code,
                   $1.result, $1.code,
                   $3.result, $3.code);
   }
-  | '-' E %prec NEG
+
+  | '-' expression %prec NEG
   {
     //printf("-%d",$2.result->value);
     $$ = $2;
     $$.result->value = -$2.result->value;
   }
-  | '(' E ')'
+
+  | '(' expression ')'
   { $$ = $2; }
+
   | INT
   { //printf("expr -> INT\n");
     printf("%d",$1);
@@ -480,6 +509,7 @@ E:
     $$.result->type = t_float;
     $$.result->value = $1;
   }
+
   | FLOAT
   { //printf(expr -> INT\n");
     printf("%.2f",$1);
@@ -488,11 +518,13 @@ E:
     $$.result->type = t_float;
     $$.result->value = $1;
   }
+
   | ID indice
   {
   //printf("___array[%d] spoted\n", $2);
   }
-	| ID
+
+  | ID
   { //printf("expr -> ID\n");
 		//printf("ID = %s",$1);
     struct symbol* id;
