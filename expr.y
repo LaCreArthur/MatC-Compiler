@@ -262,7 +262,7 @@ condition:
 	  printf("cond -> expr OR expr\n");
 	  struct quad* label_false  =
 		  quad_gen(label, NULL, NULL, symbol_newcst(&tds, $3.truelist->node->label));
-	  
+
 	  quad_list_complete($1.falselist, label_false->res);
 	  $$.code = $1.code;               // first condition
 	  quad_add(&$$.code, label_false); // if first is false goto second
@@ -271,7 +271,7 @@ condition:
 	  $$.truelist = $1.truelist;
 
 	  // first or second cond true same jump
-	  quad_list_add(&$$.truelist, $3.truelist); 
+	  quad_list_add(&$$.truelist, $3.truelist);
   }
 
   | condition AND condition
@@ -294,7 +294,7 @@ statement:
   ';' {$$.code = NULL;} // do nothing
 
   | TYPE ID assign
-  { 
+  {
     struct symbol* new_id;
     if ( (new_id = affectation($1,$2,$3.result, &$$.code, $3.code,1)) == NULL) {
       fprintf(stderr,"%s:%d: error: redeclaration of '%s' with no linkage\n",
@@ -308,7 +308,7 @@ statement:
   | TYPE ID dimensions assign
   {
     // check for wrong array type
-    if($1 == t_int || $1 == t_bool){ 
+    if($1 == t_int || $1 == t_bool){
       fprintf(stderr,"%s:%d:%d: error: expected 'float' or 'matrix' but argument is of "
                      "type '%s'\n", filename, line, column, symbol_typeToStr($1));
       exit_status = FAIL;
@@ -390,16 +390,16 @@ statement:
   | expression INCRorDECR	';'
   {
     // to add or remove 1
-    int op = ($2[0] == '+' ? incr : decr); 
-	
+    int op = ($2[0] == '+' ? incr : decr);
+
     // a temp with value 1
     struct symbol* incrOrDecr_tmp = (struct symbol*) calloc(1, sizeof(struct symbol));
     temp_add(&incrOrDecr_tmp);
     incrOrDecr_tmp->value = 1;
-	
+
     // add a quad E = E +/- 1
     quad_add(&$1.code, quad_gen(op, $1.result, incrOrDecr_tmp, $1.result));
-	
+
     //$1.result->value = op_calc(op, $1.result, incrOrDecr_tmp);
     quad_add(&code, $1.code);
   }
@@ -485,7 +485,7 @@ values:
   if ($$ == NULL) {
     printf("$$ is null");
   }
-  
+
   tmp_arr[tmp_arr_index] = $1;
   tmp_arr_index++;
   printf("%.2f", $1);
@@ -531,21 +531,21 @@ dimensions:
 
 expression:
   expression '+' expression
-  { 
+  {
     expr_add(add, &$$.result, &$$.code,
                    $1.result, $1.code,
                    $3.result, $3.code);
   }
 
   | expression '-' expression
-  { 
+  {
 		expr_add(sub, &$$.result, &$$.code,
 									 $1.result, $1.code,
 									 $3.result, $3.code);
   }
 
   | expression '*' expression
-  { 
+  {
     expr_add(mult, &$$.result, &$$.code,
                   $1.result, $1.code,
                   $3.result, $3.code);
@@ -568,7 +568,7 @@ expression:
   { $$ = $2; }
 
   | INT
-  { 
+  {
     printf("%d",$1);
     temp_add(&$$.result);
     $$.code = NULL;
@@ -577,7 +577,7 @@ expression:
   }
 
   | FLOAT
-  { 
+  {
     printf("%.2f",$1);
     temp_add(&$$.result);
     $$.code = NULL;
@@ -587,16 +587,16 @@ expression:
 
   | ID array_indexes
   {
-	  
+
   }
 
   | ID
-  { 
+  {
 	  struct symbol* id;
 	  if ((id = symbol_find(tds,$1)) != NULL) {
 		  $$.result = id;
 	  }
-	  
+
 	  else {
 		  column -= strlen($1) + 3;
 		  fprintf(stderr,"%s:%d:%d: error: '%s' undeclared (first use in this function)\n",
@@ -639,12 +639,13 @@ int main(int argc, char *argv[]){
     };
     // save the name of the file
     filename = strdup(argv[1]);
+    printf("start compiling %s ...\n", filename);
     if(yyin == NULL) perror("yacc_fopen ");
   }
 
   // the result asm file
   char asm_file[50];
-  strncpy(asm_file,filename,sizeof(filename)-1);
+  strncpy(asm_file,filename,strlen(filename)+1);
   strncat(asm_file,".asm",4);
   if ((out = fopen(asm_file,"w")) == NULL) {
     perror("failed to open `asm_file`:");
